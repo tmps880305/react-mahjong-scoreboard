@@ -32,7 +32,6 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
   const [winType, setWinType] = useState<LocalWinType>("tsumo");
   const [winnerSeat, setWinnerSeat] = useState<SeatIndex>(0);
   const [loserSeat, setLoserSeat] = useState<SeatIndex>(1);
-  const [riichiDeclarers, setRiichiDeclarers] = useState<SeatIndex[]>([]);
   const [tenpaiSeats, setTenpaiSeats] = useState<SeatIndex[]>([]);
   const [abortiveReason, setAbortiveReason] = useState(ABORTIVE_REASONS[0]);
 
@@ -64,15 +63,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
         winType,
         winnerSeat,
         loserSeat: winType === "ron" ? loserSeat : undefined,
-        riichiDeclarers,
         scoring,
       };
     }
     if (winType === "ryuukyoku") {
-      return { winType: "ryuukyoku", tenpaiSeats, riichiDeclarers };
+      return { winType: "ryuukyoku", tenpaiSeats };
     }
-    return { winType: "abortive", riichiDeclarers, description: abortiveReason };
-  }, [winType, winnerSeat, loserSeat, riichiDeclarers, scoring, tenpaiSeats, abortiveReason]);
+    return { winType: "abortive", description: abortiveReason };
+  }, [winType, winnerSeat, loserSeat, scoring, tenpaiSeats, abortiveReason]);
 
   const preview = useMemo(() => applyHand(round, handInput), [handInput, round]);
 
@@ -136,10 +134,6 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
               </Section>
             )}
 
-            <Section title="リーチ宣言">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
-            </Section>
-
             <Section title="点数">
               {settings.scoreInputMode === "hanfu" ? (
                 <div className="flex flex-col gap-2">
@@ -179,35 +173,27 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             <Section title="聴牌者">
               <SeatChips names={names} selected={tenpaiSeats} mode="multi" onChange={setTenpaiSeats} />
             </Section>
-            <Section title="リーチ宣言">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
-            </Section>
           </>
         )}
 
         {winType === "abortive" && (
-          <>
-            <Section title="流局の種類">
-              <div className="flex flex-wrap gap-2">
-                {ABORTIVE_REASONS.map((reason) => (
-                  <button
-                    key={reason}
-                    onClick={() => setAbortiveReason(reason)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm ${
-                      abortiveReason === reason
-                        ? "border-amber-400 bg-amber-500/20 text-amber-200"
-                        : "border-white/15 bg-white/5 text-white/70"
-                    }`}
-                  >
-                    {reason}
-                  </button>
-                ))}
-              </div>
-            </Section>
-            <Section title="リーチ宣言">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
-            </Section>
-          </>
+          <Section title="流局の種類">
+            <div className="flex flex-wrap gap-2">
+              {ABORTIVE_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setAbortiveReason(reason)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm ${
+                    abortiveReason === reason
+                      ? "border-amber-400 bg-amber-500/20 text-amber-200"
+                      : "border-white/15 bg-white/5 text-white/70"
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          </Section>
         )}
 
         <Section title="プレビュー">

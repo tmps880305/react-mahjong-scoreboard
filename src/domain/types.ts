@@ -18,6 +18,7 @@ export interface RoundState {
   number: number; // 1-4
   honba: number;
   riichiSticks: number; // count of 1000-point sticks on the table
+  riichiDeclaredSeats: SeatIndex[]; // who has declared riichi this hand
 }
 
 export interface GameSettings {
@@ -76,19 +77,16 @@ export interface WinInput {
   winType: "tsumo" | "ron";
   winnerSeat: SeatIndex;
   loserSeat?: SeatIndex; // required for ron
-  riichiDeclarers: SeatIndex[];
   scoring: WinScoring;
 }
 
 export interface RyuukyokuInput {
   winType: "ryuukyoku";
   tenpaiSeats: SeatIndex[];
-  riichiDeclarers: SeatIndex[];
 }
 
 export interface AbortiveInput {
   winType: "abortive";
-  riichiDeclarers: SeatIndex[];
   description: string;
 }
 

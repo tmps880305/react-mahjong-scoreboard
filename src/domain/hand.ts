@@ -49,11 +49,6 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
   const deltas: [number, number, number, number] = [0, 0, 0, 0];
   let riichiSticks = round.riichiSticks;
 
-  for (const seat of input.riichiDeclarers) {
-    deltas[seat] -= 1000;
-    riichiSticks += 1;
-  }
-
   let description: string;
   let dealerContinues: boolean;
 
@@ -135,7 +130,7 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
   }
 
   const marker = advanceRoundMarker(round, dealerContinues);
-  const newRound: RoundState = { ...marker, riichiSticks };
+  const newRound: RoundState = { ...marker, riichiSticks, riichiDeclaredSeats: [] };
 
   return { deltas, newRound, description, dealerContinues };
 }

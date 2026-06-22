@@ -14,7 +14,10 @@ export function loadState(): GameState | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as GameState;
+    const state = JSON.parse(raw) as GameState;
+    // Backfill fields added after this state may have been saved.
+    state.round.riichiDeclaredSeats ??= [];
+    return state;
   } catch {
     return null;
   }
