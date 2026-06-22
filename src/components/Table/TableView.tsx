@@ -77,6 +77,7 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
             roundNumber={round.number}
             honba={round.honba}
             riichiSticks={round.riichiSticks}
+            dealerRotateDeg={SEAT_LAYOUT[dealerSeat].rotate}
             onRecordHand={onRecordHand}
           />
         </div>
