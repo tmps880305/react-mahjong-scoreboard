@@ -12,10 +12,10 @@ const ABORTIVE_REASONS = ["四家立直", "三家和", "四開槓", "九種九�
 type LocalWinType = "tsumo" | "ron" | "ryuukyoku" | "abortive";
 
 const WIN_TYPE_OPTIONS: [LocalWinType, string][] = [
-  ["tsumo", "自摸"],
-  ["ron", "榮和"],
+  ["tsumo", "ツモ"],
+  ["ron", "ロン"],
   ["ryuukyoku", "流局"],
-  ["abortive", "特殊流局"],
+  ["abortive", "途中流局"],
 ];
 
 interface HandInputModalProps {
@@ -85,7 +85,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
   return (
     <Overlay
-      title="記錄本局結果"
+      title="結果を記録"
       onClose={onClose}
       footer={
         <button
@@ -95,7 +95,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             handInput ? "bg-amber-500 text-black active:scale-[0.99]" : "bg-white/10 text-white/40"
           }`}
         >
-          確認並更新分數
+          点数を更新
         </button>
       }
     >
@@ -118,7 +118,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
         {(winType === "tsumo" || winType === "ron") && (
           <>
-            <Section title="胡牌者">
+            <Section title="和了者">
               <SeatChips
                 names={names}
                 selected={winnerSeat !== null ? [winnerSeat] : []}
@@ -128,7 +128,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             </Section>
 
             {winType === "ron" && (
-              <Section title="放槍者">
+              <Section title="放銃者">
                 <SeatChips
                   names={names}
                   selected={loserSeat !== null ? [loserSeat] : []}
@@ -139,14 +139,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
               </Section>
             )}
 
-            <Section title="立直宣告">
+            <Section title="リーチ宣言">
               <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
             </Section>
 
-            <Section title="點數">
+            <Section title="点数">
               {settings.scoreInputMode === "hanfu" ? (
                 <div className="flex flex-col gap-2">
-                  <NumberStepper label="番數" value={han} min={1} max={13} onChange={setHan} suffix="番" />
+                  <NumberStepper label="翻数" value={han} min={1} max={13} onChange={setHan} suffix="翻" />
                   {han < 5 && (
                     <div className="flex flex-wrap gap-1.5">
                       {FU_OPTIONS.map((f) => (
@@ -164,13 +164,13 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
                   )}
                 </div>
               ) : winType === "ron" ? (
-                <NumberStepper label="放槍點數" value={ronPoints} min={0} max={48000} step={100} onChange={setRonPoints} />
+                <NumberStepper label="放銃点数" value={ronPoints} min={0} max={48000} step={100} onChange={setRonPoints} />
               ) : winnerIsDealer ? (
-                <NumberStepper label="每家支付" value={tsumoEach} min={0} max={16000} step={100} onChange={setTsumoEach} />
+                <NumberStepper label="各家の支払い" value={tsumoEach} min={0} max={16000} step={100} onChange={setTsumoEach} />
               ) : (
                 <div className="flex flex-col gap-2">
-                  <NumberStepper label="莊家支付" value={tsumoFromDealer} min={0} max={16000} step={100} onChange={setTsumoFromDealer} />
-                  <NumberStepper label="閒家支付" value={tsumoFromNonDealer} min={0} max={8000} step={100} onChange={setTsumoFromNonDealer} />
+                  <NumberStepper label="親の支払い" value={tsumoFromDealer} min={0} max={16000} step={100} onChange={setTsumoFromDealer} />
+                  <NumberStepper label="子の支払い" value={tsumoFromNonDealer} min={0} max={8000} step={100} onChange={setTsumoFromNonDealer} />
                 </div>
               )}
             </Section>
@@ -179,10 +179,10 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
         {winType === "ryuukyoku" && (
           <>
-            <Section title="聽牌玩家">
+            <Section title="聴牌者">
               <SeatChips names={names} selected={tenpaiSeats} mode="multi" onChange={setTenpaiSeats} />
             </Section>
-            <Section title="立直宣告">
+            <Section title="リーチ宣言">
               <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
             </Section>
           </>
@@ -190,7 +190,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
         {winType === "abortive" && (
           <>
-            <Section title="流局原因">
+            <Section title="流局の種類">
               <div className="flex flex-wrap gap-2">
                 {ABORTIVE_REASONS.map((reason) => (
                   <button
@@ -207,14 +207,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
                 ))}
               </div>
             </Section>
-            <Section title="立直宣告">
+            <Section title="リーチ宣言">
               <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
             </Section>
           </>
         )}
 
         {preview && (
-          <Section title="預覽">
+          <Section title="プレビュー">
             <div className="grid grid-cols-2 gap-2 text-sm">
               {names.map((name, i) => (
                 <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5">

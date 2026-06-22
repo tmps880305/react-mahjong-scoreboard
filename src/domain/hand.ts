@@ -110,8 +110,8 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
       deltas[input.winnerSeat] += total + riichiSticks * 1000;
       riichiSticks = 0;
 
-      const kind = input.winType === "ron" ? "榮和" : "自摸";
-      const handLabel = han ? ` ${han}番${fu ? `${fu}符` : ""}` : "";
+      const kind = input.winType === "ron" ? "ロン" : "ツモ";
+      const handLabel = han ? ` ${han}翻${fu ? `${fu}符` : ""}` : "";
       description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} ${kind}${handLabel}`;
       break;
     }

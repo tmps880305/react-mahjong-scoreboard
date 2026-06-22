@@ -1,7 +1,7 @@
 import { useGame } from "../../hooks/useGame";
 import { computeFinalSettlement } from "../../domain/scoring";
 
-const RANK_LABELS = ["1st", "2nd", "3rd", "4th"];
+const RANK_LABELS = ["1位", "2位", "3位", "4位"];
 
 export function GameEndScreen() {
   const { state, dispatch } = useGame();
@@ -16,7 +16,7 @@ export function GameEndScreen() {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-black/90 px-6 text-white">
-      <h1 className="text-2xl font-bold text-amber-200">對局結束</h1>
+      <h1 className="text-2xl font-bold text-amber-200">対局終了</h1>
 
       <div className="flex w-full max-w-sm flex-col gap-2">
         {settlement.map((entry) => (
@@ -46,13 +46,13 @@ export function GameEndScreen() {
           onClick={() => dispatch({ type: "CONTINUE_GAME" })}
           className="flex-1 rounded-lg border border-white/20 bg-white/5 py-3 text-sm font-medium text-white/80"
         >
-          繼續對局
+          対局を続ける
         </button>
         <button
           onClick={() => dispatch({ type: "NEW_GAME" })}
           className="flex-1 rounded-lg bg-amber-500 py-3 text-sm font-bold text-black"
         >
-          開始新對局
+          新しい対局を開始
         </button>
       </div>
     </div>
