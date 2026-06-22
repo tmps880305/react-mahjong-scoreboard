@@ -83,6 +83,7 @@ export interface WinInput {
 export interface RyuukyokuInput {
   winType: "ryuukyoku";
   tenpaiSeats: SeatIndex[];
+  nagashiManganSeats: SeatIndex[];
 }
 
 export interface AbortiveInput {

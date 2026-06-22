@@ -111,15 +111,29 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
       break;
     }
     case "ryuukyoku": {
-      const penalty = notenPenalty(input.tenpaiSeats.length);
-      if (penalty) {
-        for (let seat = 0; seat < 4; seat++) {
-          const isTenpai = input.tenpaiSeats.includes(seat as SeatIndex);
-          deltas[seat] += isTenpai ? penalty.perTenpaiReceive : -penalty.perNotenPay;
+      if (input.nagashiManganSeats.length > 0) {
+        for (const achiever of input.nagashiManganSeats) {
+          const achieverIsDealer = achiever === dealerSeat;
+          for (let seat = 0; seat < 4; seat++) {
+            if (seat === achiever) continue;
+            const pay = achieverIsDealer ? 4000 : seat === dealerSeat ? 4000 : 2000;
+            deltas[seat] -= pay;
+            deltas[achiever] += pay;
+          }
+        }
+      } else {
+        const penalty = notenPenalty(input.tenpaiSeats.length);
+        if (penalty) {
+          for (let seat = 0; seat < 4; seat++) {
+            const isTenpai = input.tenpaiSeats.includes(seat as SeatIndex);
+            deltas[seat] += isTenpai ? penalty.perTenpaiReceive : -penalty.perNotenPay;
+          }
         }
       }
-      dealerContinues = input.tenpaiSeats.includes(dealerSeat);
-      description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} 流局`;
+      dealerContinues = input.tenpaiSeats.includes(dealerSeat) || input.nagashiManganSeats.includes(dealerSeat);
+      description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} ${
+        input.nagashiManganSeats.length > 0 ? "流局満貫" : "流局"
+      }`;
       break;
     }
     case "abortive": {

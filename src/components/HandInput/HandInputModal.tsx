@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Overlay } from "../Overlay";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { useGame } from "../../hooks/useGame";
 import { applyHand, dealerSeatOf } from "../../domain/hand";
 import type { HandInput, SeatIndex, WinScoring } from "../../domain/types";
@@ -33,7 +34,9 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
   const [winnerSeat, setWinnerSeat] = useState<SeatIndex>(0);
   const [loserSeat, setLoserSeat] = useState<SeatIndex>(1);
   const [tenpaiSeats, setTenpaiSeats] = useState<SeatIndex[]>([]);
+  const [nagashiManganSeats, setNagashiManganSeats] = useState<SeatIndex[]>([]);
   const [abortiveReason, setAbortiveReason] = useState(ABORTIVE_REASONS[0]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [han, setHan] = useState(3);
   const [fu, setFu] = useState(30);
@@ -67,10 +70,10 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
       };
     }
     if (winType === "ryuukyoku") {
-      return { winType: "ryuukyoku", tenpaiSeats };
+      return { winType: "ryuukyoku", tenpaiSeats, nagashiManganSeats };
     }
     return { winType: "abortive", description: abortiveReason };
-  }, [winType, winnerSeat, loserSeat, scoring, tenpaiSeats, abortiveReason]);
+  }, [winType, winnerSeat, loserSeat, scoring, tenpaiSeats, nagashiManganSeats, abortiveReason]);
 
   const preview = useMemo(() => applyHand(round, handInput), [handInput, round]);
 
@@ -92,7 +95,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
       onClose={onClose}
       footer={
         <button
-          onClick={submit}
+          onClick={() => setConfirmOpen(true)}
           className="w-full rounded-lg bg-amber-500 py-3 text-center text-base font-bold text-black active:scale-[0.99]"
         >
           点数を更新
@@ -173,6 +176,9 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             <Section title="聴牌者">
               <SeatChips names={names} selected={tenpaiSeats} mode="multi" onChange={setTenpaiSeats} />
             </Section>
+            <Section title="流局満貫">
+              <SeatChips names={names} selected={nagashiManganSeats} mode="multi" onChange={setNagashiManganSeats} />
+            </Section>
           </>
         )}
 
@@ -214,6 +220,31 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
           </div>
         </Section>
       </div>
+
+      {confirmOpen && (
+        <ConfirmDialog
+          title="点数を更新しますか？"
+          confirmLabel="更新"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={submit}
+        >
+          <div className="flex flex-col gap-1.5 text-sm">
+            {names.map((name, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <span className="text-white/60">{name}</span>
+                <span
+                  className={
+                    preview.deltas[i] > 0 ? "text-green-400" : preview.deltas[i] < 0 ? "text-red-400" : "text-white/40"
+                  }
+                >
+                  {preview.deltas[i] > 0 ? "+" : ""}
+                  {preview.deltas[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </ConfirmDialog>
+      )}
     </Overlay>
   );
 }
