@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useGame } from "../../hooks/useGame";
 import { computeFinalSettlement } from "../../domain/scoring";
+import { HistoryLog } from "../History/HistoryLog";
 
 const RANK_LABELS = ["1位", "2位", "3位", "4位"];
 
 export function GameEndScreen() {
   const { state, dispatch } = useGame();
   const { players, settings } = state;
+  const [showHistory, setShowHistory] = useState(false);
 
   const settlement = computeFinalSettlement({
     scores: players.map((p) => p.score) as [number, number, number, number],
@@ -15,7 +18,7 @@ export function GameEndScreen() {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-black/90 px-6 text-white">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-neutral-950/95 px-6 text-white">
       <h1 className="text-2xl font-bold text-amber-200">対局終了</h1>
 
       <div className="flex w-full max-w-sm flex-col gap-2">
@@ -23,7 +26,7 @@ export function GameEndScreen() {
           <div
             key={entry.seat}
             className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
-              entry.rank === 1 ? "border-amber-400 bg-amber-500/15" : "border-white/10 bg-white/5"
+              entry.rank === 1 ? "border-amber-400 bg-amber-500/25" : "border-white/15 bg-white/15"
             }`}
           >
             <span className="w-10 text-center text-sm font-bold text-white/60">{RANK_LABELS[entry.rank - 1]}</span>
@@ -49,12 +52,16 @@ export function GameEndScreen() {
           対局を続ける
         </button>
         <button
-          onClick={() => dispatch({ type: "NEW_GAME" })}
+          onClick={() => setShowHistory(true)}
           className="flex-1 rounded-lg bg-amber-500 py-3 text-sm font-bold text-black"
         >
-          新しい対局を開始
+          履歴を表示
         </button>
       </div>
+
+      {showHistory && (
+        <HistoryLog onClose={() => setShowHistory(false)} onStartNewGame={() => dispatch({ type: "NEW_GAME" })} />
+      )}
     </div>
   );
 }
