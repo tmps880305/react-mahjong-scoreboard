@@ -13,6 +13,15 @@ interface PlayerScoreBoxProps {
 const BOX_WIDTH = "52cqw";
 const BOX_HEIGHT = "15cqw";
 
+// Shrinks the name to fit instead of truncating with "...".
+function nameFontSize(name: string): string {
+  const baseChars = 4;
+  const baseSize = 3.4;
+  const minSize = 1.6;
+  if (name.length <= baseChars) return `${baseSize}cqw`;
+  return `${Math.max(minSize, baseSize * (baseChars / name.length))}cqw`;
+}
+
 export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDeg, onToggleRiichi }: PlayerScoreBoxProps) {
   const isSideways = rotateDeg === 90 || rotateDeg === -90;
   const scoreText = `${score < 0 ? "−" : ""}${Math.abs(score)}`;
@@ -33,7 +42,12 @@ export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDe
         style={{ width: BOX_WIDTH, height: BOX_HEIGHT, transform: `rotate(${rotateDeg}deg)` }}
       >
         <span className="flex flex-col items-center gap-[0.3cqw]">
-          <span className="max-w-[14cqw] truncate text-[2.3cqw] tracking-wide text-white/35">{name}</span>
+          <span
+            className="max-w-[18cqw] whitespace-nowrap tracking-wide text-white/35"
+            style={{ fontSize: nameFontSize(name) }}
+          >
+            {name}
+          </span>
           <span className={`text-[15cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
             {wind}
           </span>
