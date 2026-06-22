@@ -29,19 +29,19 @@ export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDe
         onClick={onToggleRiichi}
         aria-pressed={isRiichi}
         aria-label="リーチ"
-        className="flex shrink-0 flex-col items-center justify-center gap-[0.5cqw] active:scale-95"
+        className="flex shrink-0 items-end justify-center gap-[2.2cqw] font-serif active:scale-95"
         style={{ width: BOX_WIDTH, height: BOX_HEIGHT, transform: `rotate(${rotateDeg}deg)` }}
       >
-        <span className="max-w-[48cqw] truncate text-[2.3cqw] tracking-wide text-white/35">{name}</span>
-        <span className="flex items-baseline gap-[2.2cqw] font-serif leading-none">
+        <span className="flex flex-col items-center gap-[0.3cqw]">
+          <span className="max-w-[14cqw] truncate text-[2.3cqw] tracking-wide text-white/35">{name}</span>
           <span className={`text-[15cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
             {wind}
           </span>
-          <span className={`text-[15cqw] leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
-            {scoreText}
-          </span>
-          {isRiichi && <span className="h-[3cqw] w-[3cqw] shrink-0 rounded-full bg-red-500" />}
         </span>
+        <span className={`text-[15cqw] leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
+          {scoreText}
+        </span>
+        {isRiichi && <span className="mb-[1cqw] h-[3cqw] w-[3cqw] shrink-0 rounded-full bg-red-500" />}
       </button>
     </div>
   );
