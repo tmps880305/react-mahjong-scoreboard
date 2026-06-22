@@ -11,7 +11,7 @@ export function Overlay({ title, onClose, children, footer }: OverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/70" onClick={onClose}>
       <div
-        className="mt-auto flex max-h-[88vh] flex-col rounded-t-2xl bg-neutral-900 text-white shadow-2xl"
+        className="mx-auto mt-auto flex max-h-[88vh] w-[min(100vw,100dvh)] flex-col rounded-t-2xl bg-neutral-900 text-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
