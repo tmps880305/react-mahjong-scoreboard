@@ -105,7 +105,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             <button
               key={type}
               onClick={() => setWinType(type)}
-              className={`rounded-lg border py-2 text-sm font-medium ${
+              className={`rounded-lg border py-3 text-sm font-medium ${
                 winType === type
                   ? "border-amber-400 bg-amber-500/20 text-amber-200"
                   : "border-white/15 bg-white/5 text-white/70"
@@ -240,7 +240,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">{title}</div>
+      <div className="mb-1.5 text-lg font-semibold uppercase tracking-wide text-white/40">{title}</div>
       {children}
     </div>
   );
