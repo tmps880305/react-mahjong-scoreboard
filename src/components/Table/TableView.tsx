@@ -1,13 +1,9 @@
-import { useState } from "react";
 import { useGame } from "../../hooks/useGame";
 import { dealerSeatOf, seatWindLabel } from "../../domain/hand";
 import type { SeatIndex } from "../../domain/types";
 import { GearIcon, ListIcon } from "../common/icons";
 import { CenterPanel } from "./CenterPanel";
 import { PlayerScoreBox } from "./PlayerScoreBox";
-import { TilePicker } from "./TilePicker";
-
-const DEFAULT_WALL_COUNT = 70;
 
 // `nudge` pulls each player's score in toward the center a touch, so glyphs
 // don't sit flush against the frame edge (where they were getting clipped).
@@ -28,20 +24,6 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
   const { state } = useGame();
   const { players, round } = state;
   const dealerSeat = dealerSeatOf(round);
-
-  const [wallCount, setWallCount] = useState(DEFAULT_WALL_COUNT);
-  const [doraIndicators, setDoraIndicators] = useState<string[]>([]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  // Cosmetic-only state: reset whenever a new hand begins (React's
-  // "adjust state during render" pattern, avoids an extra effect render).
-  const roundKey = `${round.wind}-${round.number}-${round.honba}`;
-  const [lastRoundKey, setLastRoundKey] = useState(roundKey);
-  if (roundKey !== lastRoundKey) {
-    setLastRoundKey(roundKey);
-    setWallCount(DEFAULT_WALL_COUNT);
-    setDoraIndicators([]);
-  }
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl bg-black">
@@ -93,25 +75,10 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
             roundNumber={round.number}
             honba={round.honba}
             riichiSticks={round.riichiSticks}
-            wallCount={wallCount}
-            onWallCountChange={(delta) => setWallCount((c) => Math.max(0, c + delta))}
-            doraIndicators={doraIndicators}
-            onOpenDoraPicker={() => setPickerOpen(true)}
-            onRemoveDora={(index) => setDoraIndicators((tiles) => tiles.filter((_, i) => i !== index))}
             onRecordHand={onRecordHand}
           />
         </div>
       </div>
-
-      {pickerOpen && (
-        <TilePicker
-          onClose={() => setPickerOpen(false)}
-          onSelect={(tile) => {
-            setDoraIndicators((tiles) => [...tiles, tile]);
-            setPickerOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }
