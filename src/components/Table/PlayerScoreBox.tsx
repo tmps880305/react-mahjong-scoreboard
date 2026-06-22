@@ -34,29 +34,39 @@ export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDe
         height: isSideways ? BOX_WIDTH : BOX_HEIGHT,
       }}
     >
-      <button
-        onClick={onToggleRiichi}
-        aria-pressed={isRiichi}
-        aria-label="リーチ"
-        className="flex shrink-0 items-end justify-center gap-[2.2cqw] font-serif active:scale-95"
+      <div
+        className="relative flex shrink-0 items-center justify-center font-serif"
         style={{ width: BOX_WIDTH, height: BOX_HEIGHT, transform: `rotate(${rotateDeg}deg)` }}
       >
-        <span className="flex flex-col items-center gap-[0.3cqw]">
-          <span
-            className="max-w-[18cqw] whitespace-nowrap tracking-wide text-white/35"
-            style={{ fontSize: nameFontSize(name) }}
-          >
-            {name}
+        <button
+          onClick={onToggleRiichi}
+          aria-pressed={isRiichi}
+          aria-label="リーチ"
+          className={`absolute -top-[1.8cqw] left-1/2 h-[1.8cqw] w-[9cqw] -translate-x-1/2 rounded-[1px] ${
+            isRiichi ? "bg-white shadow" : "border border-dashed border-white/20"
+          }`}
+        >
+          {isRiichi && (
+            <span className="absolute left-1/2 top-1/2 h-[1.3cqw] w-[1.3cqw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500" />
+          )}
+        </button>
+        <span className="flex items-end justify-center gap-[2.2cqw]">
+          <span className="flex flex-col items-center gap-[0.3cqw]">
+            <span
+              className="max-w-[18cqw] whitespace-nowrap tracking-wide text-white/35"
+              style={{ fontSize: nameFontSize(name) }}
+            >
+              {name}
+            </span>
+            <span className={`text-[15cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
+              {wind}
+            </span>
           </span>
-          <span className={`text-[15cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
-            {wind}
+          <span className={`text-[15cqw] leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
+            {scoreText}
           </span>
         </span>
-        <span className={`text-[15cqw] leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
-          {scoreText}
-        </span>
-        {isRiichi && <span className="mb-[1cqw] h-[3cqw] w-[3cqw] shrink-0 rounded-full bg-red-500" />}
-      </button>
+      </div>
     </div>
   );
 }
