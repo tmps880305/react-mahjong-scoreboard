@@ -11,7 +11,7 @@ html, body, #root {
 }
 
 body {
-  font-family: "Hiragino Sans", "Noto Sans TC", system-ui, sans-serif;
+  font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
   user-select: none;

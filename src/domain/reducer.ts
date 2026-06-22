@@ -11,10 +11,10 @@ export const DEFAULT_SETTINGS: GameSettings = {
 
 function makeDefaultPlayers(startingScore: number): [Player, Player, Player, Player] {
   return [
-    { name: "玩家1", score: startingScore },
-    { name: "玩家2", score: startingScore },
-    { name: "玩家3", score: startingScore },
-    { name: "玩家4", score: startingScore },
+    { name: "プレイヤー1", score: startingScore },
+    { name: "プレイヤー2", score: startingScore },
+    { name: "プレイヤー3", score: startingScore },
+    { name: "プレイヤー4", score: startingScore },
   ];
 }
 

@@ -5,7 +5,7 @@ import { NumberStepper } from "../common/NumberStepper";
 import type { GameLength, ScoreInputMode } from "../../domain/types";
 
 const UMA_PRESETS: { label: string; value: [number, number, number, number] }[] = [
-  { label: "無", value: [0, 0, 0, 0] },
+  { label: "なし", value: [0, 0, 0, 0] },
   { label: "5-10", value: [1500, 500, -500, -1500] },
   { label: "10-20", value: [3000, 1000, -1000, -3000] },
   { label: "20-30", value: [5000, 2000, -2000, -5000] },
@@ -23,7 +23,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   return (
     <Overlay title="設定" onClose={onClose}>
       <div className="flex flex-col gap-6">
-        <Section title="玩家名稱">
+        <Section title="プレイヤー名">
           <div className="flex flex-col gap-2">
             {players.map((p, i) => (
               <input
@@ -37,7 +37,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         </Section>
 
-        <Section title="點數輸入模式">
+        <Section title="点数入力モード">
           <div className="grid grid-cols-2 gap-2">
             {(["hanfu", "direct"] as ScoreInputMode[]).map((mode) => (
               <button
@@ -49,13 +49,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     : "border-white/15 bg-white/5 text-white/70"
                 }`}
               >
-                {mode === "hanfu" ? "番數 / 符數" : "直接輸入點數"}
+                {mode === "hanfu" ? "翻符" : "点数を直接入力"}
               </button>
             ))}
           </div>
         </Section>
 
-        <Section title="對局長度">
+        <Section title="対局形式">
           <div className="grid grid-cols-2 gap-2">
             {(["tonpuusen", "hanchan"] as GameLength[]).map((len) => (
               <button
@@ -67,16 +67,16 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                     : "border-white/15 bg-white/5 text-white/70"
                 }`}
               >
-                {len === "tonpuusen" ? "東風戰" : "半莊戰"}
+                {len === "tonpuusen" ? "東風戦" : "半荘戦"}
               </button>
             ))}
           </div>
         </Section>
 
-        <Section title="起始分數 / 返點">
+        <Section title="開始点 / 返し点">
           <div className="flex flex-col gap-2">
             <NumberStepper
-              label="起始分數"
+              label="開始点"
               value={settings.startingScore}
               min={10000}
               max={50000}
@@ -84,7 +84,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               onChange={(v) => dispatch({ type: "UPDATE_SETTINGS", settings: { startingScore: v } })}
             />
             <NumberStepper
-              label="返點 (結算基準)"
+              label="返し点（精算基準）"
               value={settings.returnScore}
               min={10000}
               max={50000}
@@ -94,7 +94,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         </Section>
 
-        <Section title="馬(Uma)">
+        <Section title="ウマ">
           <div className="grid grid-cols-4 gap-2">
             {UMA_PRESETS.map((preset) => (
               <button
@@ -112,7 +112,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         </Section>
 
-        <Section title="對局">
+        <Section title="対局">
           {confirmingNewGame ? (
             <div className="flex gap-2">
               <button
@@ -123,13 +123,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                 }}
                 className="flex-1 rounded-lg bg-red-500 py-2 text-sm font-bold text-white"
               >
-                確認重新開始（會清除目前分數與記錄）
+                新しい対局を開始（点数・記録を削除）
               </button>
               <button
                 onClick={() => setConfirmingNewGame(false)}
                 className="rounded-lg border border-white/15 px-4 py-2 text-sm text-white/70"
               >
-                取消
+                キャンセル
               </button>
             </div>
           ) : (
@@ -137,7 +137,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               onClick={() => setConfirmingNewGame(true)}
               className="w-full rounded-lg border border-white/15 bg-white/5 py-2 text-sm font-medium text-white/80"
             >
-              開始新對局
+              新しい対局を開始
             </button>
           )}
         </Section>

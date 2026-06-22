@@ -13,7 +13,7 @@ export function HistoryLog({ onClose }: HistoryLogProps) {
 
   return (
     <Overlay
-      title="歷史記錄"
+      title="履歴"
       onClose={onClose}
       footer={
         <button
@@ -23,12 +23,12 @@ export function HistoryLog({ onClose }: HistoryLogProps) {
             history.length === 0 ? "bg-white/10 text-white/40" : "bg-red-500/90 text-white active:scale-[0.99]"
           }`}
         >
-          復原最後一手
+          1局取り消す
         </button>
       }
     >
       {reversed.length === 0 ? (
-        <div className="py-10 text-center text-sm text-white/40">尚無記錄</div>
+        <div className="py-10 text-center text-sm text-white/40">記録がありません</div>
       ) : (
         <div className="flex flex-col gap-2">
           {reversed.map((entry, idx) => (

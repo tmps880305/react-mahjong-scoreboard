@@ -9,11 +9,13 @@ import { TilePicker } from "./TilePicker";
 
 const DEFAULT_WALL_COUNT = 70;
 
-const SEAT_LAYOUT: Record<SeatIndex, { area: string; rotate: number }> = {
-  0: { area: "bottom", rotate: 0 },
-  1: { area: "right", rotate: -90 },
-  2: { area: "top", rotate: 180 },
-  3: { area: "left", rotate: 90 },
+// `nudge` pulls each player's score in toward the center a touch, so glyphs
+// don't sit flush against the frame edge (where they were getting clipped).
+const SEAT_LAYOUT: Record<SeatIndex, { area: string; rotate: number; nudge: string }> = {
+  0: { area: "bottom", rotate: 0, nudge: "translateY(-2cqw)" },
+  1: { area: "right", rotate: -90, nudge: "translateX(-2cqw)" },
+  2: { area: "top", rotate: 180, nudge: "translateY(2cqw)" },
+  3: { area: "left", rotate: 90, nudge: "translateX(2cqw)" },
 };
 
 interface TableViewProps {
@@ -52,7 +54,7 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
       </button>
       <button
         onClick={onOpenHistory}
-        aria-label="歷史記錄"
+        aria-label="履歴"
         className="absolute right-[1.5cqw] top-[1.5cqw] z-10 h-[9cqw] w-[9cqw] rounded-full p-[2.2cqw] text-white/30 hover:text-white/70"
       >
         <ListIcon />
@@ -69,7 +71,11 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
         {([0, 1, 2, 3] as SeatIndex[]).map((seat) => {
           const layout = SEAT_LAYOUT[seat];
           return (
-            <div key={seat} style={{ gridArea: layout.area }} className="flex items-center justify-center">
+            <div
+              key={seat}
+              style={{ gridArea: layout.area, transform: layout.nudge }}
+              className="flex items-center justify-center"
+            >
               <PlayerScoreBox
                 name={players[seat].name}
                 score={players[seat].score}

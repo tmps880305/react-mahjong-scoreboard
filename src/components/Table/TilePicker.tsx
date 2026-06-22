@@ -8,7 +8,7 @@ interface TilePickerProps {
 
 export function TilePicker({ onSelect, onClose }: TilePickerProps) {
   return (
-    <Overlay title="選擇寶牌指示牌" onClose={onClose}>
+    <Overlay title="ドラ表示牌を選択" onClose={onClose}>
       <div className="flex flex-col gap-3">
         {TILE_GROUPS.map((group) => (
           <div key={group.label}>
