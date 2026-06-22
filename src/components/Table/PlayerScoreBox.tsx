@@ -42,12 +42,12 @@ export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDe
           onClick={onToggleRiichi}
           aria-pressed={isRiichi}
           aria-label="リーチ"
-          className={`absolute -top-[1.8cqw] left-1/2 h-[1.8cqw] w-[9cqw] -translate-x-1/2 rounded-[1px] ${
+          className={`absolute -top-[6cqw] left-1/2 h-[3cqw] w-[45cqw] -translate-x-1/2 rounded-[0.8cqw] ${
             isRiichi ? "bg-white shadow" : "border border-dashed border-white/20"
           }`}
         >
           {isRiichi && (
-            <span className="absolute left-1/2 top-1/2 h-[1.3cqw] w-[1.3cqw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500" />
+            <span className="absolute left-1/2 top-1/2 h-[2.2cqw] w-[2.2cqw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500" />
           )}
         </button>
         <span className="flex items-end justify-center gap-[2.2cqw]">
