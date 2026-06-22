@@ -21,7 +21,7 @@ interface TableViewProps {
 }
 
 export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: TableViewProps) {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
   const { players, round } = state;
   const dealerSeat = dealerSeatOf(round);
 
@@ -63,7 +63,9 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
                 score={players[seat].score}
                 wind={seatWindLabel(seat, round)}
                 isDealer={seat === dealerSeat}
+                isRiichi={round.riichiDeclaredSeats.includes(seat)}
                 rotateDeg={layout.rotate}
+                onToggleRiichi={() => dispatch({ type: "TOGGLE_RIICHI", seat })}
               />
             </div>
           );

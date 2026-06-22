@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Overlay } from "../Overlay";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { useGame } from "../../hooks/useGame";
 
 interface HistoryLogProps {
@@ -10,6 +12,8 @@ export function HistoryLog({ onClose }: HistoryLogProps) {
   const { history, players } = state;
   const names = players.map((p) => p.name);
   const reversed = [...history].reverse();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const lastEntry = history[history.length - 1];
 
   return (
     <Overlay
@@ -18,7 +22,7 @@ export function HistoryLog({ onClose }: HistoryLogProps) {
       footer={
         <button
           disabled={history.length === 0}
-          onClick={() => dispatch({ type: "UNDO_LAST" })}
+          onClick={() => setConfirmOpen(true)}
           className={`w-full rounded-lg py-3 text-center text-sm font-bold ${
             history.length === 0 ? "bg-white/10 text-white/40" : "bg-red-500/90 text-white active:scale-[0.99]"
           }`}
@@ -55,6 +59,35 @@ export function HistoryLog({ onClose }: HistoryLogProps) {
             </div>
           ))}
         </div>
+      )}
+
+      {confirmOpen && lastEntry && (
+        <ConfirmDialog
+          title="この1局を取り消しますか？"
+          confirmLabel="取り消す"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={() => {
+            dispatch({ type: "UNDO_LAST" });
+            setConfirmOpen(false);
+          }}
+        >
+          <div className="flex flex-col gap-1.5 text-sm">
+            <div className="mb-1 text-white/80">{lastEntry.description}</div>
+            {names.map((name, i) => {
+              const delta = lastEntry.deltas[i];
+              if (delta === 0) return null;
+              return (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-white/60">{name}</span>
+                  <span className={delta > 0 ? "text-green-400" : "text-red-400"}>
+                    {delta > 0 ? "+" : ""}
+                    {delta}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </ConfirmDialog>
       )}
     </Overlay>
   );
