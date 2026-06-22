@@ -6,11 +6,23 @@ import { applyHand, dealerSeatOf } from "../../domain/hand";
 import { formatHanFuCombo, guessHanFuForRon, guessHanFuForTsumoEach, guessHanFuForTsumoNonDealer } from "../../domain/scoring";
 import type { HandInput, SeatIndex, WinScoring } from "../../domain/types";
 import { SeatChips } from "../common/SeatChips";
-import { NumberStepper } from "../common/NumberStepper";
 import { PointInput } from "../common/PointInput";
 
 const FU_OPTIONS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 const ABORTIVE_REASONS = ["四家立直", "三家和", "四開槓", "九種九牌", "四風連打"];
+
+const HAN_BUTTON_OPTIONS: [number, string][] = [
+  [1, "1翻"],
+  [2, "2翻"],
+  [3, "3翻"],
+  [4, "4翻"],
+  [5, "満貫"],
+  [6, "跳満"],
+  [8, "倍満"],
+  [11, "三倍満"],
+  [13, "役満"],
+  [26, "ダブル役満"],
+];
 
 type LocalWinType = "tsumo" | "ron" | "ryuukyoku" | "abortive";
 
@@ -104,6 +116,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
     }
   };
 
+  const selectHan = (value: number) => {
+    setHan(value);
+    if (value < 5) {
+      const validFu = FU_OPTIONS.filter((f) => f * 2 ** (2 + value) <= 2000);
+      if (!validFu.includes(fu)) setFu(validFu[validFu.length - 1]);
+    }
+  };
+
   return (
     <Overlay
       title="結果を記録"
@@ -155,10 +175,24 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             <Section title="点数">
               {settings.scoreInputMode === "hanfu" ? (
                 <div className="flex flex-col gap-2">
-                  <NumberStepper label="翻数" value={han} min={1} max={13} onChange={setHan} suffix="翻" />
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {HAN_BUTTON_OPTIONS.map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => selectHan(value)}
+                        className={`rounded-lg border py-2 text-xs font-medium ${
+                          han === value
+                            ? "border-amber-400 bg-amber-500/20 text-amber-200"
+                            : "border-white/15 bg-white/5 text-white/70"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   {han < 5 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {FU_OPTIONS.map((f) => (
+                      {FU_OPTIONS.filter((f) => f * 2 ** (2 + han) <= 2000).map((f) => (
                         <button
                           key={f}
                           onClick={() => setFu(f)}

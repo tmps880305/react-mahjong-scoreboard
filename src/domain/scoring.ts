@@ -4,6 +4,7 @@ export const roundUp100 = (x: number): number => Math.ceil(x / 100) * 100;
 
 /** Base points from han/fu, with mangan-and-above caps applied. */
 export function baseFromHanFu(han: number, fu: number): number {
+  if (han >= 26) return 16000; // double yakuman
   if (han >= 13) return 8000; // yakuman
   if (han >= 11) return 6000; // sanbaiman
   if (han >= 8) return 4000; // baiman
@@ -11,6 +12,17 @@ export function baseFromHanFu(han: number, fu: number): number {
   if (han >= 5) return 2000; // mangan
   const base = fu * 2 ** (2 + han);
   return Math.min(base, 2000); // cap at mangan (e.g. 4han30fu, 3han70fu)
+}
+
+/** Displays "3翻30符" below mangan, or the bracket name (満貫/跳満/.../ダブル役満) above it. */
+export function formatHanFu(han: number, fu: number): string {
+  if (han >= 26) return "ダブル役満";
+  if (han >= 13) return "役満";
+  if (han >= 11) return "三倍満";
+  if (han >= 8) return "倍満";
+  if (han >= 6) return "跳満";
+  if (han >= 5) return "満貫";
+  return `${han}翻${fu}符`;
 }
 
 export interface RonResult {

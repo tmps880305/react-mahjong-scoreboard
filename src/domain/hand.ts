@@ -1,4 +1,4 @@
-import { baseFromHanFu, notenPenalty, ronPayment, tsumoPayments } from "./scoring";
+import { baseFromHanFu, formatHanFu, notenPenalty, ronPayment, tsumoPayments } from "./scoring";
 import type { GameLength, HandInput, RoundState, SeatIndex } from "./types";
 
 export function dealerSeatOf(round: RoundState): SeatIndex {
@@ -106,7 +106,7 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
       riichiSticks = 0;
 
       const kind = input.winType === "ron" ? "ロン" : "ツモ";
-      const handLabel = han ? ` ${han}翻${fu ? `${fu}符` : ""}` : "";
+      const handLabel = han !== undefined ? ` ${formatHanFu(han, fu ?? 0)}` : "";
       description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} ${kind}${handLabel}`;
       break;
     }
