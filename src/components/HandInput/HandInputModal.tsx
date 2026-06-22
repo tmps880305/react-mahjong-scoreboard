@@ -3,6 +3,7 @@ import { Overlay } from "../Overlay";
 import { ConfirmDialog } from "../common/ConfirmDialog";
 import { useGame } from "../../hooks/useGame";
 import { applyHand, dealerSeatOf } from "../../domain/hand";
+import { formatHanFuCombo, guessHanFuForRon, guessHanFuForTsumoEach, guessHanFuForTsumoNonDealer } from "../../domain/scoring";
 import type { HandInput, SeatIndex, WinScoring } from "../../domain/types";
 import { SeatChips } from "../common/SeatChips";
 import { NumberStepper } from "../common/NumberStepper";
@@ -76,6 +77,20 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
   }, [winType, winnerSeat, loserSeat, scoring, tenpaiSeats, nagashiManganSeats, abortiveReason]);
 
   const preview = useMemo(() => applyHand(round, handInput), [handInput, round]);
+
+  const dealerPaysLess =
+    settings.scoreInputMode === "direct" && winType === "tsumo" && !winnerIsDealer && tsumoFromNonDealer > tsumoFromDealer;
+
+  const hanFuGuess = useMemo(() => {
+    if (settings.scoreInputMode !== "direct") return null;
+    if (winType === "ron") return guessHanFuForRon(ronPoints, winnerIsDealer);
+    if (winType === "tsumo") {
+      if (winnerIsDealer) return guessHanFuForTsumoEach(tsumoEach);
+      if (dealerPaysLess) return null; // impossible payment shape; no meaningful combo to suggest
+      return guessHanFuForTsumoNonDealer(tsumoFromNonDealer);
+    }
+    return null;
+  }, [settings.scoreInputMode, winType, winnerIsDealer, ronPoints, tsumoEach, tsumoFromNonDealer, dealerPaysLess]);
 
   const submit = () => {
     dispatch({ type: "APPLY_HAND", input: handInput });
@@ -163,8 +178,8 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
                 <PointInput label="各家の支払い" value={tsumoEach} onChange={setTsumoEach} />
               ) : (
                 <div className="flex flex-col gap-3">
-                  <PointInput label="親の支払い" value={tsumoFromDealer} onChange={setTsumoFromDealer} />
                   <PointInput label="子の支払い" value={tsumoFromNonDealer} onChange={setTsumoFromNonDealer} />
+                  <PointInput label="親の支払い" value={tsumoFromDealer} onChange={setTsumoFromDealer} />
                 </div>
               )}
             </Section>
@@ -243,6 +258,29 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
               </div>
             ))}
           </div>
+
+          {dealerPaysLess && (
+            <div className="mt-3 rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">
+              ⚠ 親の支払いは子の支払いより多いはずです。入力ミスの可能性があります。
+            </div>
+          )}
+
+          {hanFuGuess && (
+            <div
+              className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                hanFuGuess.exact ? "bg-white/5 text-white/60" : "bg-red-500/15 text-red-300"
+              }`}
+            >
+              {hanFuGuess.exact ? "番符の組み合わせ（50符以下）:" : "⚠ 一致する組み合わせが見つかりません。一番近いのは（入力ミスの可能性があります）:"}
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {hanFuGuess.combos.map((combo, i) => (
+                  <span key={i} className="rounded bg-black/20 px-2 py-1">
+                    {formatHanFuCombo(combo)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </ConfirmDialog>
       )}
     </Overlay>
