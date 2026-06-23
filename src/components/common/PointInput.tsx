@@ -4,7 +4,7 @@ interface PointInputProps {
   onChange: (value: number) => void;
 }
 
-const QUICK_ADD = [10000, 1000, 500, 100];
+const QUICK_ADD = [10000, 8000, 1000, 500, 100];
 
 export function PointInput({ label, value, onChange }: PointInputProps) {
   return (
