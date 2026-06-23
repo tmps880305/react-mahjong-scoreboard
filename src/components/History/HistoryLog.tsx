@@ -78,11 +78,13 @@ export function HistoryLog({ onClose, onStartNewGame }: HistoryLogProps) {
       {confirmOpen && lastEntry && (
         <ConfirmDialog
           title="この1局を元に戻しますか？"
-          confirmLabel="元に戻す"
+          confirmLabel="戻す"
+          variant="danger"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             dispatch({ type: "UNDO_LAST" });
             setConfirmOpen(false);
+            onClose();
           }}
         >
           <div className="flex flex-col gap-1.5 text-sm">
