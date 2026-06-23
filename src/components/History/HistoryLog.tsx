@@ -13,21 +13,18 @@ export function HistoryLog({ onClose, onStartNewGame }: HistoryLogProps) {
   const { state, dispatch } = useGame();
   const { history, players } = state;
   const names = players.map((p) => p.name);
-  const reversed = [...history].reverse();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const lastEntry = history[history.length - 1];
 
   const renderEntry = (entry: HandLogEntry) => (
     <div
       key={entry.id}
-      className={`rounded-lg border border-white/10 bg-white/5 ${onStartNewGame ? "mb-1.5 break-inside-avoid px-2 py-1.5" : "px-3 py-2"} ${
+      className={`mb-1.5 break-inside-avoid rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 ${
         entry.id === lastEntry?.id ? "ring-1 ring-amber-400/40" : ""
       }`}
     >
-      <div className={`mb-1 font-medium text-white/90 ${onStartNewGame ? "text-xs" : "text-sm"}`}>
-        {entry.description}
-      </div>
-      <div className={`grid grid-cols-2 gap-1 ${onStartNewGame ? "text-[10px]" : "text-xs"}`}>
+      <div className="mb-1 text-xs font-medium text-white/90">{entry.description}</div>
+      <div className="grid grid-cols-2 gap-1 text-[10px]">
         {names.map((name, i) => {
           const delta = entry.deltas[i];
           if (delta === 0) return null;
@@ -72,12 +69,10 @@ export function HistoryLog({ onClose, onStartNewGame }: HistoryLogProps) {
     >
       {history.length === 0 ? (
         <div className="py-10 text-center text-sm text-white/40">記録がありません</div>
-      ) : onStartNewGame ? (
+      ) : (
         <div className="h-full columns-2 gap-1.5" style={{ columnFill: "auto" }}>
           {history.map(renderEntry)}
         </div>
-      ) : (
-        <div className="flex flex-col gap-2">{reversed.map(renderEntry)}</div>
       )}
 
       {confirmOpen && lastEntry && (
