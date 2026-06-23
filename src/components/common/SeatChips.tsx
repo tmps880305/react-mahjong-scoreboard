@@ -19,7 +19,7 @@ export function SeatChips({ names, selected, mode, disabled = [], onChange }: Se
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-3">
       {([0, 1, 2, 3] as SeatIndex[]).map((seat) => {
         const isSelected = selected.includes(seat);
         const isDisabled = disabled.includes(seat);
@@ -29,7 +29,7 @@ export function SeatChips({ names, selected, mode, disabled = [], onChange }: Se
             type="button"
             disabled={isDisabled}
             onClick={() => toggle(seat)}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg border px-3 py-3 text-sm font-medium transition ${
               isDisabled
                 ? "cursor-not-allowed border-white/5 bg-white/5 text-white/30"
                 : isSelected

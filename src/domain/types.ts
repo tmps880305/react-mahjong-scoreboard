@@ -1,6 +1,6 @@
 export type SeatIndex = 0 | 1 | 2 | 3;
 
-export type RoundWind = "E" | "S";
+export type RoundWind = "E" | "S" | "W";
 
 export type WinType = "tsumo" | "ron" | "ryuukyoku" | "abortive";
 
@@ -18,6 +18,7 @@ export interface RoundState {
   number: number; // 1-4
   honba: number;
   riichiSticks: number; // count of 1000-point sticks on the table
+  riichiDeclaredSeats: SeatIndex[]; // who has declared riichi this hand
 }
 
 export interface GameSettings {
@@ -26,6 +27,8 @@ export interface GameSettings {
   gameLength: GameLength;
   uma: [number, number, number, number]; // points awarded to rank 1..4, sums to 0
   scoreInputMode: ScoreInputMode;
+  /** Hanchan only: if nobody has reached this score at South 4, the game extends into West round (西入), capped at West 4. */
+  westEntryScore: number;
 }
 
 export interface HandLogEntry {
@@ -76,19 +79,17 @@ export interface WinInput {
   winType: "tsumo" | "ron";
   winnerSeat: SeatIndex;
   loserSeat?: SeatIndex; // required for ron
-  riichiDeclarers: SeatIndex[];
   scoring: WinScoring;
 }
 
 export interface RyuukyokuInput {
   winType: "ryuukyoku";
   tenpaiSeats: SeatIndex[];
-  riichiDeclarers: SeatIndex[];
+  nagashiManganSeats: SeatIndex[];
 }
 
 export interface AbortiveInput {
   winType: "abortive";
-  riichiDeclarers: SeatIndex[];
   description: string;
 }
 

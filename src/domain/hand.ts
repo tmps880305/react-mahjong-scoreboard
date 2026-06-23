@@ -1,13 +1,18 @@
-import { baseFromHanFu, notenPenalty, ronPayment, tsumoPayments } from "./scoring";
-import type { GameLength, HandInput, RoundState, SeatIndex } from "./types";
+import { baseFromHanFu, formatHanFu, notenPenalty, ronPayment, tsumoPayments } from "./scoring";
+import type { GameSettings, HandInput, Player, RoundState, RoundWind, SeatIndex } from "./types";
 
 export function dealerSeatOf(round: RoundState): SeatIndex {
   return ((round.number - 1) % 4) as SeatIndex;
 }
 
+const ROUND_WIND_LABELS: Record<RoundWind, string> = { E: "東", S: "南", W: "西" };
+
+export function roundWindLabel(wind: RoundWind): string {
+  return ROUND_WIND_LABELS[wind];
+}
+
 export function roundLabel(round: RoundState): string {
-  const windLabel = round.wind === "E" ? "東" : "南";
-  return `${windLabel}${round.number}局`;
+  return `${roundWindLabel(round.wind)}${round.number}局`;
 }
 
 const SEAT_WIND_LABELS = ["東", "南", "西", "北"] as const;
@@ -19,9 +24,54 @@ export function seatWindLabel(seat: SeatIndex, round: RoundState): string {
   return SEAT_WIND_LABELS[relative];
 }
 
-export function isLastHandOf(round: RoundState, gameLength: GameLength): boolean {
-  if (gameLength === "tonpuusen") return round.wind === "E" && round.number === 4;
-  return round.wind === "S" && round.number === 4;
+/**
+ * Whether the game ends after this hand.
+ *
+ * 飛び (tobi): if anyone's score has gone negative, the game ends right
+ * here regardless of round position, dealer renchan, or any other rule —
+ * the final scores are kept as-is (negative included), not floored at 0.
+ *
+ * At South 4, a dealer renchan (1本場, 2本場...) keeps going — that streak
+ * itself is the dealer's comeback chance (親の逆転チャンス) — unless the
+ * dealer has now caught up to sole/tied 1st place AND reached
+ * `westEntryScore`, in which case the comeback succeeded and the game ends
+ * right there even mid-renchan. If the dealer doesn't continue, it's a
+ * plain threshold check: someone must have reached `westEntryScore`,
+ * otherwise it extends into West round (西入).
+ *
+ * Once in West round, reaching `westEntryScore` ends the game immediately
+ * even mid-renchan, and West 4 is a hard cap with no further extension
+ * (no 北入).
+ */
+export function isGameOver(
+  round: RoundState,
+  settings: GameSettings,
+  players: readonly Player[],
+  dealerContinues: boolean,
+): boolean {
+  if (players.some((p) => p.score < 0)) return true;
+
+  if (settings.gameLength === "tonpuusen") {
+    return !dealerContinues && round.wind === "E" && round.number === 4;
+  }
+
+  if (round.wind === "S" && round.number === 4) {
+    if (dealerContinues) {
+      const dealerSeat = dealerSeatOf(round);
+      const dealerScore = players[dealerSeat].score;
+      const bestOtherScore = Math.max(...players.filter((_, i) => i !== dealerSeat).map((p) => p.score));
+      return dealerScore > bestOtherScore && dealerScore >= settings.westEntryScore;
+    }
+    return players.some((p) => p.score >= settings.westEntryScore);
+  }
+
+  if (round.wind === "W") {
+    if (players.some((p) => p.score >= settings.westEntryScore)) return true;
+    if (dealerContinues) return false;
+    return round.number === 4; // hard cap, no 北入
+  }
+
+  return false;
 }
 
 function advanceRoundMarker(round: RoundState, dealerContinues: boolean): Pick<RoundState, "wind" | "number" | "honba"> {
@@ -32,7 +82,7 @@ function advanceRoundMarker(round: RoundState, dealerContinues: boolean): Pick<R
   let wind = round.wind;
   if (number > 4) {
     number = 1;
-    wind = wind === "E" ? "S" : "E";
+    wind = wind === "E" ? "S" : wind === "S" ? "W" : "E";
   }
   return { wind, number, honba: 0 };
 }
@@ -48,11 +98,6 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
   const dealerSeat = dealerSeatOf(round);
   const deltas: [number, number, number, number] = [0, 0, 0, 0];
   let riichiSticks = round.riichiSticks;
-
-  for (const seat of input.riichiDeclarers) {
-    deltas[seat] -= 1000;
-    riichiSticks += 1;
-  }
 
   let description: string;
   let dealerContinues: boolean;
@@ -110,21 +155,35 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
       deltas[input.winnerSeat] += total + riichiSticks * 1000;
       riichiSticks = 0;
 
-      const kind = input.winType === "ron" ? "榮和" : "自摸";
-      const handLabel = han ? ` ${han}番${fu ? `${fu}符` : ""}` : "";
+      const kind = input.winType === "ron" ? "ロン" : "ツモ";
+      const handLabel = han !== undefined ? ` ${formatHanFu(han, fu ?? 0)}` : "";
       description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} ${kind}${handLabel}`;
       break;
     }
     case "ryuukyoku": {
-      const penalty = notenPenalty(input.tenpaiSeats.length);
-      if (penalty) {
-        for (let seat = 0; seat < 4; seat++) {
-          const isTenpai = input.tenpaiSeats.includes(seat as SeatIndex);
-          deltas[seat] += isTenpai ? penalty.perTenpaiReceive : -penalty.perNotenPay;
+      if (input.nagashiManganSeats.length > 0) {
+        for (const achiever of input.nagashiManganSeats) {
+          const achieverIsDealer = achiever === dealerSeat;
+          for (let seat = 0; seat < 4; seat++) {
+            if (seat === achiever) continue;
+            const pay = achieverIsDealer ? 4000 : seat === dealerSeat ? 4000 : 2000;
+            deltas[seat] -= pay;
+            deltas[achiever] += pay;
+          }
+        }
+      } else {
+        const penalty = notenPenalty(input.tenpaiSeats.length);
+        if (penalty) {
+          for (let seat = 0; seat < 4; seat++) {
+            const isTenpai = input.tenpaiSeats.includes(seat as SeatIndex);
+            deltas[seat] += isTenpai ? penalty.perTenpaiReceive : -penalty.perNotenPay;
+          }
         }
       }
-      dealerContinues = input.tenpaiSeats.includes(dealerSeat);
-      description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} 流局`;
+      dealerContinues = input.tenpaiSeats.includes(dealerSeat) || input.nagashiManganSeats.includes(dealerSeat);
+      description = `${roundLabel(round)}${round.honba > 0 ? ` ${round.honba}本場` : ""} ${
+        input.nagashiManganSeats.length > 0 ? "流局満貫" : "流局"
+      }`;
       break;
     }
     case "abortive": {
@@ -135,7 +194,7 @@ export function applyHand(round: RoundState, input: HandInput): HandApplication 
   }
 
   const marker = advanceRoundMarker(round, dealerContinues);
-  const newRound: RoundState = { ...marker, riichiSticks };
+  const newRound: RoundState = { ...marker, riichiSticks, riichiDeclaredSeats: [] };
 
   return { deltas, newRound, description, dealerContinues };
 }

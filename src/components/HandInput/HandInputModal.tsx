@@ -1,21 +1,36 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Overlay } from "../Overlay";
+import { ConfirmDialog } from "../common/ConfirmDialog";
 import { useGame } from "../../hooks/useGame";
 import { applyHand, dealerSeatOf } from "../../domain/hand";
+import { formatHanFuCombo, guessHanFuForRon, guessHanFuForTsumoEach, guessHanFuForTsumoNonDealer } from "../../domain/scoring";
 import type { HandInput, SeatIndex, WinScoring } from "../../domain/types";
 import { SeatChips } from "../common/SeatChips";
-import { NumberStepper } from "../common/NumberStepper";
+import { PointInput } from "../common/PointInput";
 
 const FU_OPTIONS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 const ABORTIVE_REASONS = ["四家立直", "三家和", "四開槓", "九種九牌", "四風連打"];
 
+const HAN_BUTTON_OPTIONS: [number, string][] = [
+  [1, "1翻"],
+  [2, "2翻"],
+  [3, "3翻"],
+  [4, "4翻"],
+  [5, "満貫"],
+  [6, "跳満"],
+  [8, "倍満"],
+  [11, "三倍満"],
+  [13, "役満"],
+  [26, "ダブル役満"],
+];
+
 type LocalWinType = "tsumo" | "ron" | "ryuukyoku" | "abortive";
 
 const WIN_TYPE_OPTIONS: [LocalWinType, string][] = [
-  ["tsumo", "自摸"],
-  ["ron", "榮和"],
+  ["tsumo", "ツモ"],
+  ["ron", "ロン"],
   ["ryuukyoku", "流局"],
-  ["abortive", "特殊流局"],
+  ["abortive", "途中流局"],
 ];
 
 interface HandInputModalProps {
@@ -29,20 +44,21 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
   const names = players.map((p) => p.name) as [string, string, string, string];
 
   const [winType, setWinType] = useState<LocalWinType>("tsumo");
-  const [winnerSeat, setWinnerSeat] = useState<SeatIndex | null>(null);
-  const [loserSeat, setLoserSeat] = useState<SeatIndex | null>(null);
-  const [riichiDeclarers, setRiichiDeclarers] = useState<SeatIndex[]>([]);
+  const [winnerSeat, setWinnerSeat] = useState<SeatIndex>(0);
+  const [loserSeat, setLoserSeat] = useState<SeatIndex>(1);
   const [tenpaiSeats, setTenpaiSeats] = useState<SeatIndex[]>([]);
+  const [nagashiManganSeats, setNagashiManganSeats] = useState<SeatIndex[]>([]);
   const [abortiveReason, setAbortiveReason] = useState(ABORTIVE_REASONS[0]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [han, setHan] = useState(3);
   const [fu, setFu] = useState(30);
-  const [ronPoints, setRonPoints] = useState(8000);
-  const [tsumoEach, setTsumoEach] = useState(4000);
-  const [tsumoFromDealer, setTsumoFromDealer] = useState(4000);
-  const [tsumoFromNonDealer, setTsumoFromNonDealer] = useState(2000);
+  const [ronPoints, setRonPoints] = useState(0);
+  const [tsumoEach, setTsumoEach] = useState(0);
+  const [tsumoFromDealer, setTsumoFromDealer] = useState(0);
+  const [tsumoFromNonDealer, setTsumoFromNonDealer] = useState(0);
 
-  const winnerIsDealer = winnerSeat !== null && winnerSeat === dealerSeat;
+  const winnerIsDealer = winnerSeat === dealerSeat;
 
   const scoring: WinScoring = useMemo(() => {
     if (settings.scoreInputMode === "hanfu") {
@@ -57,45 +73,67 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
     return { mode: "direct", tsumoFromDealer, tsumoFromNonDealer };
   }, [settings.scoreInputMode, han, fu, winType, winnerIsDealer, ronPoints, tsumoEach, tsumoFromDealer, tsumoFromNonDealer]);
 
-  const handInput: HandInput | null = useMemo(() => {
+  const handInput: HandInput = useMemo(() => {
     if (winType === "tsumo" || winType === "ron") {
-      if (winnerSeat === null) return null;
-      if (winType === "ron" && loserSeat === null) return null;
       return {
         winType,
         winnerSeat,
-        loserSeat: winType === "ron" ? loserSeat! : undefined,
-        riichiDeclarers,
+        loserSeat: winType === "ron" ? loserSeat : undefined,
         scoring,
       };
     }
     if (winType === "ryuukyoku") {
-      return { winType: "ryuukyoku", tenpaiSeats, riichiDeclarers };
+      return { winType: "ryuukyoku", tenpaiSeats, nagashiManganSeats };
     }
-    return { winType: "abortive", riichiDeclarers, description: abortiveReason };
-  }, [winType, winnerSeat, loserSeat, riichiDeclarers, scoring, tenpaiSeats, abortiveReason]);
+    return { winType: "abortive", description: abortiveReason };
+  }, [winType, winnerSeat, loserSeat, scoring, tenpaiSeats, nagashiManganSeats, abortiveReason]);
 
-  const preview = useMemo(() => (handInput ? applyHand(round, handInput) : null), [handInput, round]);
+  const preview = useMemo(() => applyHand(round, handInput), [handInput, round]);
+
+  const dealerPaysLess =
+    settings.scoreInputMode === "direct" && winType === "tsumo" && !winnerIsDealer && tsumoFromNonDealer > tsumoFromDealer;
+
+  const hanFuGuess = useMemo(() => {
+    if (settings.scoreInputMode !== "direct") return null;
+    if (winType === "ron") return guessHanFuForRon(ronPoints, winnerIsDealer);
+    if (winType === "tsumo") {
+      if (winnerIsDealer) return guessHanFuForTsumoEach(tsumoEach);
+      if (dealerPaysLess) return null; // impossible payment shape; no meaningful combo to suggest
+      return guessHanFuForTsumoNonDealer(tsumoFromNonDealer);
+    }
+    return null;
+  }, [settings.scoreInputMode, winType, winnerIsDealer, ronPoints, tsumoEach, tsumoFromNonDealer, dealerPaysLess]);
 
   const submit = () => {
-    if (!handInput) return;
     dispatch({ type: "APPLY_HAND", input: handInput });
     onClose();
   };
 
+  const selectWinner = (seat: SeatIndex) => {
+    setWinnerSeat(seat);
+    if (loserSeat === seat) {
+      setLoserSeat(([0, 1, 2, 3] as SeatIndex[]).find((s) => s !== seat)!);
+    }
+  };
+
+  const selectHan = (value: number) => {
+    setHan(value);
+    if (value < 5) {
+      const validFu = FU_OPTIONS.filter((f) => f * 2 ** (2 + value) <= 2000);
+      if (!validFu.includes(fu)) setFu(validFu[validFu.length - 1]);
+    }
+  };
+
   return (
     <Overlay
-      title="記錄本局結果"
+      title="得点計算"
       onClose={onClose}
       footer={
         <button
-          disabled={!handInput}
-          onClick={submit}
-          className={`w-full rounded-lg py-3 text-center text-base font-bold ${
-            handInput ? "bg-amber-500 text-black active:scale-[0.99]" : "bg-white/10 text-white/40"
-          }`}
+          onClick={() => setConfirmOpen(true)}
+          className="w-full rounded-lg bg-amber-500 py-3 text-center text-base font-bold text-black active:scale-[0.99]"
         >
-          確認並更新分數
+          計算する
         </button>
       }
     >
@@ -105,7 +143,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
             <button
               key={type}
               onClick={() => setWinType(type)}
-              className={`rounded-lg border py-2 text-sm font-medium ${
+              className={`rounded-lg border py-3 text-sm font-medium ${
                 winType === type
                   ? "border-amber-400 bg-amber-500/20 text-amber-200"
                   : "border-white/15 bg-white/5 text-white/70"
@@ -118,38 +156,43 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
         {(winType === "tsumo" || winType === "ron") && (
           <>
-            <Section title="胡牌者">
-              <SeatChips
-                names={names}
-                selected={winnerSeat !== null ? [winnerSeat] : []}
-                mode="single"
-                onChange={(s) => setWinnerSeat(s[0])}
-              />
+            <Section title="和了者">
+              <SeatChips names={names} selected={[winnerSeat]} mode="single" onChange={(s) => selectWinner(s[0])} />
             </Section>
 
             {winType === "ron" && (
-              <Section title="放槍者">
+              <Section title="放銃者">
                 <SeatChips
                   names={names}
-                  selected={loserSeat !== null ? [loserSeat] : []}
+                  selected={[loserSeat]}
                   mode="single"
-                  disabled={winnerSeat !== null ? [winnerSeat] : []}
+                  disabled={[winnerSeat]}
                   onChange={(s) => setLoserSeat(s[0])}
                 />
               </Section>
             )}
 
-            <Section title="立直宣告">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
-            </Section>
-
-            <Section title="點數">
+            <Section title="点数">
               {settings.scoreInputMode === "hanfu" ? (
                 <div className="flex flex-col gap-2">
-                  <NumberStepper label="番數" value={han} min={1} max={13} onChange={setHan} suffix="番" />
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {HAN_BUTTON_OPTIONS.map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => selectHan(value)}
+                        className={`rounded-lg border py-2 text-xs font-medium ${
+                          han === value
+                            ? "border-amber-400 bg-amber-500/20 text-amber-200"
+                            : "border-white/15 bg-white/5 text-white/70"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   {han < 5 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {FU_OPTIONS.map((f) => (
+                      {FU_OPTIONS.filter((f) => f * 2 ** (2 + han) <= 2000).map((f) => (
                         <button
                           key={f}
                           onClick={() => setFu(f)}
@@ -164,13 +207,13 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
                   )}
                 </div>
               ) : winType === "ron" ? (
-                <NumberStepper label="放槍點數" value={ronPoints} min={0} max={48000} step={100} onChange={setRonPoints} />
+                <PointInput label="放銃点数" value={ronPoints} onChange={setRonPoints} />
               ) : winnerIsDealer ? (
-                <NumberStepper label="每家支付" value={tsumoEach} min={0} max={16000} step={100} onChange={setTsumoEach} />
+                <PointInput label="各家の支払い" value={tsumoEach} onChange={setTsumoEach} />
               ) : (
-                <div className="flex flex-col gap-2">
-                  <NumberStepper label="莊家支付" value={tsumoFromDealer} min={0} max={16000} step={100} onChange={setTsumoFromDealer} />
-                  <NumberStepper label="閒家支付" value={tsumoFromNonDealer} min={0} max={8000} step={100} onChange={setTsumoFromNonDealer} />
+                <div className="flex flex-col gap-3">
+                  <PointInput label="子の支払い" value={tsumoFromNonDealer} onChange={setTsumoFromNonDealer} />
+                  <PointInput label="親の支払い" value={tsumoFromDealer} onChange={setTsumoFromDealer} />
                 </div>
               )}
             </Section>
@@ -179,60 +222,102 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
         {winType === "ryuukyoku" && (
           <>
-            <Section title="聽牌玩家">
+            <Section title="聴牌者">
               <SeatChips names={names} selected={tenpaiSeats} mode="multi" onChange={setTenpaiSeats} />
             </Section>
-            <Section title="立直宣告">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
+            <Section title="流局満貫">
+              <SeatChips names={names} selected={nagashiManganSeats} mode="multi" onChange={setNagashiManganSeats} />
             </Section>
           </>
         )}
 
         {winType === "abortive" && (
-          <>
-            <Section title="流局原因">
-              <div className="flex flex-wrap gap-2">
-                {ABORTIVE_REASONS.map((reason) => (
-                  <button
-                    key={reason}
-                    onClick={() => setAbortiveReason(reason)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm ${
-                      abortiveReason === reason
-                        ? "border-amber-400 bg-amber-500/20 text-amber-200"
-                        : "border-white/15 bg-white/5 text-white/70"
-                    }`}
-                  >
-                    {reason}
-                  </button>
-                ))}
-              </div>
-            </Section>
-            <Section title="立直宣告">
-              <SeatChips names={names} selected={riichiDeclarers} mode="multi" onChange={setRiichiDeclarers} />
-            </Section>
-          </>
-        )}
-
-        {preview && (
-          <Section title="預覽">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              {names.map((name, i) => (
-                <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5">
-                  <span className="text-white/60">{name}</span>
-                  <span
-                    className={
-                      preview.deltas[i] > 0 ? "text-green-400" : preview.deltas[i] < 0 ? "text-red-400" : "text-white/40"
-                    }
-                  >
-                    {preview.deltas[i] > 0 ? "+" : ""}
-                    {preview.deltas[i]}
-                  </span>
-                </div>
+          <Section title="流局の種類">
+            <div className="flex flex-wrap gap-2">
+              {ABORTIVE_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  onClick={() => setAbortiveReason(reason)}
+                  className={`rounded-lg border px-3 py-1.5 text-sm ${
+                    abortiveReason === reason
+                      ? "border-amber-400 bg-amber-500/20 text-amber-200"
+                      : "border-white/15 bg-white/5 text-white/70"
+                  }`}
+                >
+                  {reason}
+                </button>
               ))}
             </div>
           </Section>
         )}
+
+        <Section title="プレビュー">
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {names.map((name, i) => (
+              <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-[0.5625rem]">
+                <span className="text-white/60">{name}</span>
+                <span
+                  className={
+                    preview.deltas[i] > 0 ? "text-green-400" : preview.deltas[i] < 0 ? "text-red-400" : "text-white/40"
+                  }
+                >
+                  {preview.deltas[i] > 0 ? "+" : ""}
+                  {preview.deltas[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
       </div>
+
+      {confirmOpen && (
+        <ConfirmDialog
+          title="点数を更新しますか？"
+          confirmLabel="更新"
+          size="large"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={submit}
+        >
+          <div className="flex flex-col gap-[0.5625rem] text-[1.3125rem]">
+            {names.map((name, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <span className="text-white/60">{name}</span>
+                <span
+                  className={
+                    preview.deltas[i] > 0 ? "text-green-400" : preview.deltas[i] < 0 ? "text-red-400" : "text-white/40"
+                  }
+                >
+                  {preview.deltas[i] > 0 ? "+" : ""}
+                  {preview.deltas[i]}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {dealerPaysLess && (
+            <div className="mt-3 rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">
+              ⚠ 親の支払いは子の支払いより多いはずです。入力ミスの可能性があります。
+            </div>
+          )}
+
+          {hanFuGuess && (
+            <div
+              className={`mt-3 rounded-lg px-3 py-2 text-sm ${
+                hanFuGuess.exact ? "bg-white/5 text-white/60" : "bg-red-500/15 text-red-300"
+              }`}
+            >
+              {hanFuGuess.exact ? "番符の組み合わせ（50符以下）:" : "⚠ 一致する組み合わせが見つかりません。一番近いのは（入力ミスの可能性があります）:"}
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {hanFuGuess.combos.map((combo, i) => (
+                  <span key={i} className="rounded bg-black/20 px-2 py-1">
+                    {formatHanFuCombo(combo)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </ConfirmDialog>
+      )}
     </Overlay>
   );
 }
@@ -240,7 +325,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-white/40">{title}</div>
+      <div className="mb-1.5 text-lg font-semibold uppercase tracking-wide text-white/40">{title}</div>
       {children}
     </div>
   );

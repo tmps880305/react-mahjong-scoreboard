@@ -1,19 +1,17 @@
-import { useState } from "react";
 import { useGame } from "../../hooks/useGame";
 import { dealerSeatOf, seatWindLabel } from "../../domain/hand";
 import type { SeatIndex } from "../../domain/types";
 import { GearIcon, ListIcon } from "../common/icons";
 import { CenterPanel } from "./CenterPanel";
 import { PlayerScoreBox } from "./PlayerScoreBox";
-import { TilePicker } from "./TilePicker";
 
-const DEFAULT_WALL_COUNT = 70;
-
-const SEAT_LAYOUT: Record<SeatIndex, { area: string; rotate: number }> = {
-  0: { area: "bottom", rotate: 0 },
-  1: { area: "right", rotate: -90 },
-  2: { area: "top", rotate: 180 },
-  3: { area: "left", rotate: 90 },
+// `nudge` pulls each player's score in toward the center a touch, so glyphs
+// don't sit flush against the frame edge (where they were getting clipped).
+const SEAT_LAYOUT: Record<SeatIndex, { area: string; rotate: number; nudge: string }> = {
+  0: { area: "bottom", rotate: 0, nudge: "translateY(-2cqw)" },
+  1: { area: "right", rotate: -90, nudge: "translateX(-2cqw)" },
+  2: { area: "top", rotate: 180, nudge: "translateY(2cqw)" },
+  3: { area: "left", rotate: 90, nudge: "translateX(2cqw)" },
 };
 
 interface TableViewProps {
@@ -23,23 +21,9 @@ interface TableViewProps {
 }
 
 export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: TableViewProps) {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
   const { players, round } = state;
   const dealerSeat = dealerSeatOf(round);
-
-  const [wallCount, setWallCount] = useState(DEFAULT_WALL_COUNT);
-  const [doraIndicators, setDoraIndicators] = useState<string[]>([]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  // Cosmetic-only state: reset whenever a new hand begins (React's
-  // "adjust state during render" pattern, avoids an extra effect render).
-  const roundKey = `${round.wind}-${round.number}-${round.honba}`;
-  const [lastRoundKey, setLastRoundKey] = useState(roundKey);
-  if (roundKey !== lastRoundKey) {
-    setLastRoundKey(roundKey);
-    setWallCount(DEFAULT_WALL_COUNT);
-    setDoraIndicators([]);
-  }
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-2xl bg-black">
@@ -52,7 +36,7 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
       </button>
       <button
         onClick={onOpenHistory}
-        aria-label="歷史記錄"
+        aria-label="履歴"
         className="absolute right-[1.5cqw] top-[1.5cqw] z-10 h-[9cqw] w-[9cqw] rounded-full p-[2.2cqw] text-white/30 hover:text-white/70"
       >
         <ListIcon />
@@ -69,13 +53,19 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
         {([0, 1, 2, 3] as SeatIndex[]).map((seat) => {
           const layout = SEAT_LAYOUT[seat];
           return (
-            <div key={seat} style={{ gridArea: layout.area }} className="flex items-center justify-center">
+            <div
+              key={seat}
+              style={{ gridArea: layout.area, transform: layout.nudge }}
+              className="flex items-center justify-center"
+            >
               <PlayerScoreBox
                 name={players[seat].name}
                 score={players[seat].score}
                 wind={seatWindLabel(seat, round)}
                 isDealer={seat === dealerSeat}
+                isRiichi={round.riichiDeclaredSeats.includes(seat)}
                 rotateDeg={layout.rotate}
+                onToggleRiichi={() => dispatch({ type: "TOGGLE_RIICHI", seat })}
               />
             </div>
           );
@@ -87,25 +77,11 @@ export function TableView({ onRecordHand, onOpenSettings, onOpenHistory }: Table
             roundNumber={round.number}
             honba={round.honba}
             riichiSticks={round.riichiSticks}
-            wallCount={wallCount}
-            onWallCountChange={(delta) => setWallCount((c) => Math.max(0, c + delta))}
-            doraIndicators={doraIndicators}
-            onOpenDoraPicker={() => setPickerOpen(true)}
-            onRemoveDora={(index) => setDoraIndicators((tiles) => tiles.filter((_, i) => i !== index))}
+            dealerRotateDeg={SEAT_LAYOUT[dealerSeat].rotate}
             onRecordHand={onRecordHand}
           />
         </div>
       </div>
-
-      {pickerOpen && (
-        <TilePicker
-          onClose={() => setPickerOpen(false)}
-          onSelect={(tile) => {
-            setDoraIndicators((tiles) => [...tiles, tile]);
-            setPickerOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }

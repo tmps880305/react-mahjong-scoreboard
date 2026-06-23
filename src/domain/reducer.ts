@@ -1,4 +1,4 @@
-import { applyHand, dealerSeatOf, isLastHandOf } from "./hand";
+import { applyHand, dealerSeatOf, isGameOver } from "./hand";
 import type { GameSettings, GameState, HandInput, HandLogEntry, Player, SeatIndex } from "./types";
 
 export const DEFAULT_SETTINGS: GameSettings = {
@@ -7,14 +7,15 @@ export const DEFAULT_SETTINGS: GameSettings = {
   gameLength: "hanchan",
   uma: [1500, 500, -500, -1500],
   scoreInputMode: "hanfu",
+  westEntryScore: 30000,
 };
 
 function makeDefaultPlayers(startingScore: number): [Player, Player, Player, Player] {
   return [
-    { name: "玩家1", score: startingScore },
-    { name: "玩家2", score: startingScore },
-    { name: "玩家3", score: startingScore },
-    { name: "玩家4", score: startingScore },
+    { name: "プレイヤー1", score: startingScore },
+    { name: "プレイヤー2", score: startingScore },
+    { name: "プレイヤー3", score: startingScore },
+    { name: "プレイヤー4", score: startingScore },
   ];
 }
 
@@ -22,7 +23,7 @@ export function createInitialState(settingsOverride?: Partial<GameSettings>): Ga
   const settings = { ...DEFAULT_SETTINGS, ...settingsOverride };
   return {
     players: makeDefaultPlayers(settings.startingScore),
-    round: { wind: "E", number: 1, honba: 0, riichiSticks: 0 },
+    round: { wind: "E", number: 1, honba: 0, riichiSticks: 0, riichiDeclaredSeats: [] },
     settings,
     history: [],
     isEnded: false,
@@ -36,6 +37,7 @@ export type GameAction =
   | { type: "RENAME_PLAYER"; seat: SeatIndex; name: string }
   | { type: "NEW_GAME"; settings?: Partial<GameSettings> }
   | { type: "CONTINUE_GAME" }
+  | { type: "TOGGLE_RIICHI"; seat: SeatIndex }
   | { type: "LOAD_STATE"; state: GameState };
 
 function makeLogEntry(state: GameState, input: HandInput, deltas: [number, number, number, number], scoresAfter: [number, number, number, number], description: string): HandLogEntry {
@@ -63,7 +65,7 @@ function makeLogEntry(state: GameState, input: HandInput, deltas: [number, numbe
     winType: input.winType,
     winnerSeat,
     loserSeat,
-    riichiDeclarers: input.riichiDeclarers,
+    riichiDeclarers: state.round.riichiDeclaredSeats,
     tenpaiSeats,
     han,
     fu,
@@ -80,8 +82,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { deltas, newRound, description, dealerContinues } = applyHand(state.round, action.input);
       const players = state.players.map((p, i) => ({ ...p, score: p.score + deltas[i] })) as GameState["players"];
       const scoresAfter = players.map((p) => p.score) as [number, number, number, number];
-      const wasLastHand = isLastHandOf(state.round, state.settings.gameLength);
-      const isEnded = wasLastHand && !dealerContinues;
+      const isEnded = isGameOver(state.round, state.settings, players, dealerContinues);
       const entry = makeLogEntry(state, action.input, deltas, scoresAfter, description);
 
       return {
@@ -116,6 +117,24 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case "CONTINUE_GAME": {
       return { ...state, isEnded: false };
+    }
+    case "TOGGLE_RIICHI": {
+      if (state.isEnded) return state;
+      const { seat } = action;
+      const isDeclared = state.round.riichiDeclaredSeats.includes(seat);
+      if (!isDeclared && state.players[seat].score < 1000) return state;
+
+      const delta = isDeclared ? 1000 : -1000;
+      const players = state.players.map((p, i) => (i === seat ? { ...p, score: p.score + delta } : p)) as GameState["players"];
+      const riichiDeclaredSeats = isDeclared
+        ? state.round.riichiDeclaredSeats.filter((s) => s !== seat)
+        : [...state.round.riichiDeclaredSeats, seat];
+
+      return {
+        ...state,
+        players,
+        round: { ...state.round, riichiDeclaredSeats, riichiSticks: state.round.riichiSticks + (isDeclared ? -1 : 1) },
+      };
     }
     case "LOAD_STATE": {
       return action.state;

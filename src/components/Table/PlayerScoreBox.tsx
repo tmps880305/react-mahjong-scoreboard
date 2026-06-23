@@ -3,24 +3,28 @@ interface PlayerScoreBoxProps {
   score: number;
   wind: string;
   isDealer: boolean;
+  isRiichi: boolean;
   rotateDeg: number;
+  onToggleRiichi: () => void;
 }
 
 // Sized in container-query units (cqw) so the whole scoreboard scales with
-// the actual screen. Matched against the reference sample: the score line
-// ("東 250oo") spans ~58% of the frame width there.
-const BOX_WIDTH = "60cqw";
-const BOX_HEIGHT = "17cqw";
+// the actual screen.
+const BOX_WIDTH = "52cqw";
+const BOX_HEIGHT = "15cqw";
 
-function formatScoreParts(score: number) {
-  const sign = score < 0 ? "−" : "";
-  const str = Math.abs(score).toString().padStart(3, "0");
-  return { sign, main: str.slice(0, -2), tail: str.slice(-2) };
+// Shrinks the name to fit instead of truncating with "...".
+function nameFontSize(name: string): string {
+  const baseChars = 4;
+  const baseSize = 3.4;
+  const minSize = 1.6;
+  if (name.length <= baseChars) return `${baseSize}cqw`;
+  return `${Math.max(minSize, baseSize * (baseChars / name.length))}cqw`;
 }
 
-export function PlayerScoreBox({ name, score, wind, isDealer, rotateDeg }: PlayerScoreBoxProps) {
+export function PlayerScoreBox({ name, score, wind, isDealer, isRiichi, rotateDeg, onToggleRiichi }: PlayerScoreBoxProps) {
   const isSideways = rotateDeg === 90 || rotateDeg === -90;
-  const { sign, main, tail } = formatScoreParts(score);
+  const scoreText = `${score < 0 ? "−" : ""}${Math.abs(score)}`;
 
   return (
     <div
@@ -31,20 +35,33 @@ export function PlayerScoreBox({ name, score, wind, isDealer, rotateDeg }: Playe
       }}
     >
       <div
-        className="flex shrink-0 flex-col items-center justify-center gap-[0.5cqw]"
+        className="relative flex shrink-0 items-center justify-center font-serif"
         style={{ width: BOX_WIDTH, height: BOX_HEIGHT, transform: `rotate(${rotateDeg}deg)` }}
       >
-        <span className="max-w-[55cqw] truncate text-[2.6cqw] tracking-wide text-white/35">{name}</span>
-        <span className="flex items-baseline gap-[2.5cqw] font-serif leading-none">
-          <span className={`text-[17.5cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
-            {wind}
-          </span>
-          <span className={`leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
-            <span className="text-[17.5cqw]">
-              {sign}
-              {main}
+        <button
+          onClick={onToggleRiichi}
+          aria-pressed={isRiichi}
+          aria-label="リーチ"
+          className={`absolute -top-[6cqw] left-1/2 h-[3cqw] w-[45cqw] -translate-x-1/2 rounded-[0.8cqw] bg-white ${
+            isRiichi ? "shadow" : "opacity-25"
+          }`}
+        >
+          <span className="absolute left-1/2 top-1/2 h-[2.2cqw] w-[2.2cqw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500" />
+        </button>
+        <span className="flex items-end justify-center gap-[2.2cqw]">
+          <span className="flex flex-col items-center gap-[0.3cqw]">
+            <span
+              className="max-w-[18cqw] whitespace-nowrap tracking-wide text-white/35"
+              style={{ fontSize: nameFontSize(name) }}
+            >
+              {name}
             </span>
-            <span className="text-[9.5cqw]">{tail}</span>
+            <span className={`text-[15cqw] leading-none ${isDealer ? "font-bold text-amber-400" : "text-white/70"}`}>
+              {wind}
+            </span>
+          </span>
+          <span className={`text-[15cqw] leading-none tabular-nums ${score < 0 ? "text-red-400" : "text-white"}`}>
+            {scoreText}
           </span>
         </span>
       </div>
