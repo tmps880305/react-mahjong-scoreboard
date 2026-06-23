@@ -53,8 +53,8 @@ export function isGameOver(
     if (dealerContinues) {
       const dealerSeat = dealerSeatOf(round);
       const dealerScore = players[dealerSeat].score;
-      const topScore = Math.max(...players.map((p) => p.score));
-      return dealerScore === topScore && dealerScore >= settings.westEntryScore;
+      const bestOtherScore = Math.max(...players.filter((_, i) => i !== dealerSeat).map((p) => p.score));
+      return dealerScore > bestOtherScore && dealerScore >= settings.westEntryScore;
     }
     return players.some((p) => p.score >= settings.westEntryScore);
   }
