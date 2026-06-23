@@ -126,14 +126,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
   return (
     <Overlay
-      title="結果を記録"
+      title="得点計算"
       onClose={onClose}
       footer={
         <button
           onClick={() => setConfirmOpen(true)}
           className="w-full rounded-lg bg-amber-500 py-3 text-center text-base font-bold text-black active:scale-[0.99]"
         >
-          点数を更新
+          計算する
         </button>
       }
     >
