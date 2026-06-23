@@ -27,6 +27,10 @@ export function seatWindLabel(seat: SeatIndex, round: RoundState): string {
 /**
  * Whether the game ends after this hand.
  *
+ * 飛び (tobi): if anyone's score has gone negative, the game ends right
+ * here regardless of round position, dealer renchan, or any other rule —
+ * the final scores are kept as-is (negative included), not floored at 0.
+ *
  * At South 4, a dealer renchan (1本場, 2本場...) keeps going — that streak
  * itself is the dealer's comeback chance (親の逆転チャンス) — unless the
  * dealer has now caught up to sole/tied 1st place AND reached
@@ -45,6 +49,8 @@ export function isGameOver(
   players: readonly Player[],
   dealerContinues: boolean,
 ): boolean {
+  if (players.some((p) => p.score < 0)) return true;
+
   if (settings.gameLength === "tonpuusen") {
     return !dealerContinues && round.wind === "E" && round.number === 4;
   }
