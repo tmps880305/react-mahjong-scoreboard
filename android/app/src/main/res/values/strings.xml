@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">麻雀スコアボード</string>
-    <string name="title_activity_main">麻雀スコアボード</string>
+    <string name="app_name">麻雀スコア</string>
+    <string name="title_activity_main">麻雀スコア</string>
     <string name="package_name">com.jywang.mahjongscoreboard</string>
     <string name="custom_url_scheme">com.jywang.mahjongscoreboard</string>
 </resources>
