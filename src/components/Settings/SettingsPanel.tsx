@@ -73,6 +73,22 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
         </Section>
 
+        {settings.gameLength === "hanchan" && (
+          <Section title="西入点数">
+            <NumberStepper
+              label="西入点数"
+              value={settings.westEntryScore}
+              min={10000}
+              max={50000}
+              step={1000}
+              onChange={(v) => dispatch({ type: "UPDATE_SETTINGS", settings: { westEntryScore: v } })}
+            />
+            <p className="mt-1.5 text-xs text-white/40">
+              南4局終了時に誰もこの点数に達していなければ、西入（西4局まで延長）します。
+            </p>
+          </Section>
+        )}
+
         <Section title="開始点 / 返し点">
           <div className="flex flex-col gap-2">
             <NumberStepper

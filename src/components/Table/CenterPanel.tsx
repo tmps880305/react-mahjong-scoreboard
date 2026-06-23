@@ -1,3 +1,4 @@
+import { roundWindLabel } from "../../domain/hand";
 import type { RoundWind } from "../../domain/types";
 
 interface CenterPanelProps {
@@ -22,7 +23,7 @@ export function CenterPanel({ roundWind, roundNumber, honba, riichiSticks, deale
           className="flex items-baseline justify-center gap-[0.5cqw] font-serif leading-none active:scale-95"
         >
           <span className="text-[18.5cqw] font-bold leading-none text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.35)]">
-            {roundWind === "E" ? "東" : "南"}
+            {roundWindLabel(roundWind)}
           </span>
           <span className="text-[12cqw] font-bold leading-none text-white">{roundNumber}</span>
           <span className="text-[10cqw] leading-none text-white/70">局</span>

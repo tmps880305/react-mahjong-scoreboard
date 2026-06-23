@@ -17,6 +17,7 @@ export function loadState(): GameState | null {
     const state = JSON.parse(raw) as GameState;
     // Backfill fields added after this state may have been saved.
     state.round.riichiDeclaredSeats ??= [];
+    state.settings.westEntryScore ??= 30000;
     return state;
   } catch {
     return null;

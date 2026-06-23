@@ -1,13 +1,18 @@
 import { baseFromHanFu, formatHanFu, notenPenalty, ronPayment, tsumoPayments } from "./scoring";
-import type { GameLength, HandInput, RoundState, SeatIndex } from "./types";
+import type { GameSettings, HandInput, Player, RoundState, RoundWind, SeatIndex } from "./types";
 
 export function dealerSeatOf(round: RoundState): SeatIndex {
   return ((round.number - 1) % 4) as SeatIndex;
 }
 
+const ROUND_WIND_LABELS: Record<RoundWind, string> = { E: "東", S: "南", W: "西" };
+
+export function roundWindLabel(wind: RoundWind): string {
+  return ROUND_WIND_LABELS[wind];
+}
+
 export function roundLabel(round: RoundState): string {
-  const windLabel = round.wind === "E" ? "東" : "南";
-  return `${windLabel}${round.number}局`;
+  return `${roundWindLabel(round.wind)}${round.number}局`;
 }
 
 const SEAT_WIND_LABELS = ["東", "南", "西", "北"] as const;
@@ -19,9 +24,48 @@ export function seatWindLabel(seat: SeatIndex, round: RoundState): string {
   return SEAT_WIND_LABELS[relative];
 }
 
-export function isLastHandOf(round: RoundState, gameLength: GameLength): boolean {
-  if (gameLength === "tonpuusen") return round.wind === "E" && round.number === 4;
-  return round.wind === "S" && round.number === 4;
+/**
+ * Whether the game ends after this hand.
+ *
+ * At South 4, a dealer renchan (1本場, 2本場...) keeps going — that streak
+ * itself is the dealer's comeback chance (親の逆転チャンス) — unless the
+ * dealer has now caught up to sole/tied 1st place AND reached
+ * `westEntryScore`, in which case the comeback succeeded and the game ends
+ * right there even mid-renchan. If the dealer doesn't continue, it's a
+ * plain threshold check: someone must have reached `westEntryScore`,
+ * otherwise it extends into West round (西入).
+ *
+ * Once in West round, reaching `westEntryScore` ends the game immediately
+ * even mid-renchan, and West 4 is a hard cap with no further extension
+ * (no 北入).
+ */
+export function isGameOver(
+  round: RoundState,
+  settings: GameSettings,
+  players: readonly Player[],
+  dealerContinues: boolean,
+): boolean {
+  if (settings.gameLength === "tonpuusen") {
+    return !dealerContinues && round.wind === "E" && round.number === 4;
+  }
+
+  if (round.wind === "S" && round.number === 4) {
+    if (dealerContinues) {
+      const dealerSeat = dealerSeatOf(round);
+      const dealerScore = players[dealerSeat].score;
+      const topScore = Math.max(...players.map((p) => p.score));
+      return dealerScore === topScore && dealerScore >= settings.westEntryScore;
+    }
+    return players.some((p) => p.score >= settings.westEntryScore);
+  }
+
+  if (round.wind === "W") {
+    if (players.some((p) => p.score >= settings.westEntryScore)) return true;
+    if (dealerContinues) return false;
+    return round.number === 4; // hard cap, no 北入
+  }
+
+  return false;
 }
 
 function advanceRoundMarker(round: RoundState, dealerContinues: boolean): Pick<RoundState, "wind" | "number" | "honba"> {
@@ -32,7 +76,7 @@ function advanceRoundMarker(round: RoundState, dealerContinues: boolean): Pick<R
   let wind = round.wind;
   if (number > 4) {
     number = 1;
-    wind = wind === "E" ? "S" : "E";
+    wind = wind === "E" ? "S" : wind === "S" ? "W" : "E";
   }
   return { wind, number, honba: 0 };
 }
