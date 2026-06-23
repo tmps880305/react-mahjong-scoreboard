@@ -252,10 +252,10 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
         )}
 
         <Section title="プレビュー">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-4 gap-2 text-sm">
             {names.map((name, i) => (
-              <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-[0.5625rem]">
-                <span className="text-white/60">{name}</span>
+              <div key={i} className="flex flex-col items-center justify-center gap-0.5 rounded bg-white/5 px-1 py-[0.5625rem]">
+                <span className="truncate text-white/60">{name}</span>
                 <span
                   className={
                     preview.deltas[i] > 0 ? "text-green-400" : preview.deltas[i] < 0 ? "text-red-400" : "text-white/40"
