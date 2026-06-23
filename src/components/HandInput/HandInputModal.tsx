@@ -126,14 +126,14 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
 
   return (
     <Overlay
-      title="結果を記録"
+      title="得点計算"
       onClose={onClose}
       footer={
         <button
           onClick={() => setConfirmOpen(true)}
           className="w-full rounded-lg bg-amber-500 py-3 text-center text-base font-bold text-black active:scale-[0.99]"
         >
-          点数を更新
+          計算する
         </button>
       }
     >
@@ -254,7 +254,7 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
         <Section title="プレビュー">
           <div className="grid grid-cols-2 gap-2 text-sm">
             {names.map((name, i) => (
-              <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-1.5">
+              <div key={i} className="flex items-center justify-between rounded bg-white/5 px-2 py-[0.5625rem]">
                 <span className="text-white/60">{name}</span>
                 <span
                   className={
@@ -274,10 +274,11 @@ export function HandInputModal({ onClose }: HandInputModalProps) {
         <ConfirmDialog
           title="点数を更新しますか？"
           confirmLabel="更新"
+          size="large"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={submit}
         >
-          <div className="flex flex-col gap-1.5 text-sm">
+          <div className="flex flex-col gap-[0.5625rem] text-[1.3125rem]">
             {names.map((name, i) => (
               <div key={i} className="flex items-center justify-between">
                 <span className="text-white/60">{name}</span>
