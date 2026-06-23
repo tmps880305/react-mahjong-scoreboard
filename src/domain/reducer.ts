@@ -1,4 +1,4 @@
-import { applyHand, dealerSeatOf, isLastHandOf } from "./hand";
+import { applyHand, dealerSeatOf, isGameOver } from "./hand";
 import type { GameSettings, GameState, HandInput, HandLogEntry, Player, SeatIndex } from "./types";
 
 export const DEFAULT_SETTINGS: GameSettings = {
@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   gameLength: "hanchan",
   uma: [1500, 500, -500, -1500],
   scoreInputMode: "hanfu",
+  westEntryScore: 30000,
 };
 
 function makeDefaultPlayers(startingScore: number): [Player, Player, Player, Player] {
@@ -81,8 +82,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const { deltas, newRound, description, dealerContinues } = applyHand(state.round, action.input);
       const players = state.players.map((p, i) => ({ ...p, score: p.score + deltas[i] })) as GameState["players"];
       const scoresAfter = players.map((p) => p.score) as [number, number, number, number];
-      const wasLastHand = isLastHandOf(state.round, state.settings.gameLength);
-      const isEnded = wasLastHand && !dealerContinues;
+      const isEnded = isGameOver(state.round, state.settings, players, dealerContinues);
       const entry = makeLogEntry(state, action.input, deltas, scoresAfter, description);
 
       return {
