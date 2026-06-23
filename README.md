@@ -2,7 +2,7 @@
 
 仿天鳳（Tenhou）對局畫面風格的日本麻將計分板，給實體（手動打牌）麻將局使用。手機放在桌子中間，四邊玩家都能看到自己的分數，每局結束後手動輸入結果，由系統自動計算分數、莊家連莊、立直棒與本場數。
 
-目前以網頁形式開發，未來會用 Capacitor 包裝成 Android App，因此畫面採用正方形（1:1）版面設計，並用 CSS Container Query（`cqw`）讓文字與版面比例隨實際螢幕大小縮放。
+同時提供網頁版與用 Capacitor 包裝的 Android App，Android App 為純離線 WebView（資源全部打包進 APK），執行時不需要任何網路連線。對局桌面畫面採用正方形（1:1）版面設計，並用 CSS Container Query（`cqw`）讓文字與版面比例隨實際螢幕大小縮放。
 
 ## 功能
 
@@ -18,6 +18,7 @@
 
 - React 19 + TypeScript + Vite
 - Tailwind CSS v4
+- Capacitor（將網頁打包成 Android App，離線 WebView，無外部 plugin）
 - 純函式計分邏輯（`src/domain/`），不依賴外部麻將計分套件
 
 ## 開發
@@ -28,6 +29,27 @@ npm run dev      # 啟動開發伺服器（預設 http://localhost:5173）
 npm run build    # type-check + production build
 npm run lint      # eslint
 npm run preview  # 預覽 production build
+```
+
+## Android App
+
+- App 名稱：麻雀スコア（顯示在手機桌面）
+- appId：`com.jywang.mahjongscoreboard`
+- 原生 Android 專案在 `android/`（由 `npx cap add android` 產生，大部分內容為 Capacitor 自動生成）
+
+打包 debug APK：
+
+```bash
+npm run build && npx cap sync android
+cd android && ./gradlew assembleDebug
+```
+
+APK 輸出位置：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+透過 USB 安裝到手機（手機需先在「開發人員選項」開啟 USB 偵錯並授權這台電腦）：
+
+```bash
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 ## 專案結構
@@ -48,6 +70,7 @@ src/
     History/     # 歷史記錄 + 復原
     GameEnd/     # 對局結束結算畫面
     common/      # 共用元件（座位選擇、數字步進器、圖示）
+android/         # Capacitor 產生的原生 Android 專案（打包 APK 用）
 ```
 
 ## 規則預設值
@@ -55,7 +78,3 @@ src/
 - 起始分數 25000 / 返點 30000，半莊戰（東+南各四局）
 - 馬：5-10（可在設定改為 10-20、20-30 或無）
 - 點數輸入預設為「番數 + 符數」，可在設定切換為「直接輸入點數」
-
-## 待辦 / 之後計畫
-
-- 用 Capacitor 包裝成 Android App
