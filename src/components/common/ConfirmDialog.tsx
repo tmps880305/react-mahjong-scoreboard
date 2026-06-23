@@ -29,14 +29,14 @@ export function ConfirmDialog({
           <button
             onClick={onCancel}
             className={`flex-1 rounded-lg border border-white/15 font-medium text-white/70 ${
-              isLarge ? "py-6 text-[1.6875rem]" : "py-4 text-lg"
+              isLarge ? "py-3 text-lg" : "py-4 text-lg"
             }`}
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 rounded-lg bg-amber-500 font-bold text-black ${isLarge ? "py-6 text-[1.6875rem]" : "py-4 text-lg"}`}
+            className={`flex-1 rounded-lg bg-amber-500 font-bold text-black ${isLarge ? "py-3 text-lg" : "py-4 text-lg"}`}
           >
             {confirmLabel}
           </button>
