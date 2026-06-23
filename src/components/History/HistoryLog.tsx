@@ -62,7 +62,7 @@ export function HistoryLog({ onClose, onStartNewGame }: HistoryLogProps) {
               history.length === 0 ? "bg-white/10 text-white/40" : "bg-red-500/90 text-white active:scale-[0.99]"
             }`}
           >
-            1局取り消す
+            元に戻す
           </button>
         )
       }
@@ -77,8 +77,8 @@ export function HistoryLog({ onClose, onStartNewGame }: HistoryLogProps) {
 
       {confirmOpen && lastEntry && (
         <ConfirmDialog
-          title="この1局を取り消しますか？"
-          confirmLabel="取り消す"
+          title="この1局を元に戻しますか？"
+          confirmLabel="元に戻す"
           onCancel={() => setConfirmOpen(false)}
           onConfirm={() => {
             dispatch({ type: "UNDO_LAST" });
