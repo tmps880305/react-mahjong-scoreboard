@@ -10,7 +10,7 @@ interface OverlayProps {
 export function Overlay({ title, onClose, children, footer }: OverlayProps) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/70">
-      <div className="mx-auto mt-auto flex h-[min(100vw,100dvh)] w-[min(100vw,100dvh)] flex-col rounded-t-2xl bg-neutral-900 text-white shadow-2xl">
+      <div className="mx-auto mt-auto flex h-[92dvh] w-full flex-col rounded-t-2xl bg-neutral-900 text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-4 pb-3 pt-[max(1.5rem,env(safe-area-inset-top))]">
           <h2 className="text-2xl font-bold">{title}</h2>
           <button onClick={onClose} className="rounded-full p-1.5 text-white/60 hover:text-white">
